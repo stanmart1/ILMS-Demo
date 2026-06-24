@@ -18,7 +18,10 @@ import { Route as CatalogingRouteImport } from './routes/cataloging'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcquisitionsRouteImport } from './routes/acquisitions'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PatronsIdRouteImport } from './routes/patrons.$id'
 import { Route as OpacIdRouteImport } from './routes/opac.$id'
+import { Route as CatalogingIdRouteImport } from './routes/cataloging.$id'
+import { Route as AcquisitionsIdRouteImport } from './routes/acquisitions.$id'
 
 const SerialsRoute = SerialsRouteImport.update({
   id: '/serials',
@@ -65,48 +68,72 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PatronsIdRoute = PatronsIdRouteImport.update({
+  id: '/patrons/$id',
+  path: '/patrons/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OpacIdRoute = OpacIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => OpacRoute,
 } as any)
+const CatalogingIdRoute = CatalogingIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CatalogingRoute,
+} as any)
+const AcquisitionsIdRoute = AcquisitionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AcquisitionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/acquisitions': typeof AcquisitionsRoute
+  '/acquisitions': typeof AcquisitionsRouteWithChildren
   '/admin': typeof AdminRoute
-  '/cataloging': typeof CatalogingRoute
+  '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/acquisitions/$id': typeof AcquisitionsIdRoute
+  '/cataloging/$id': typeof CatalogingIdRoute
   '/opac/$id': typeof OpacIdRoute
+  '/patrons/$id': typeof PatronsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/acquisitions': typeof AcquisitionsRoute
+  '/acquisitions': typeof AcquisitionsRouteWithChildren
   '/admin': typeof AdminRoute
-  '/cataloging': typeof CatalogingRoute
+  '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/acquisitions/$id': typeof AcquisitionsIdRoute
+  '/cataloging/$id': typeof CatalogingIdRoute
   '/opac/$id': typeof OpacIdRoute
+  '/patrons/$id': typeof PatronsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/acquisitions': typeof AcquisitionsRoute
+  '/acquisitions': typeof AcquisitionsRouteWithChildren
   '/admin': typeof AdminRoute
-  '/cataloging': typeof CatalogingRoute
+  '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/acquisitions/$id': typeof AcquisitionsIdRoute
+  '/cataloging/$id': typeof CatalogingIdRoute
   '/opac/$id': typeof OpacIdRoute
+  '/patrons/$id': typeof PatronsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +147,10 @@ export interface FileRouteTypes {
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/acquisitions/$id'
+    | '/cataloging/$id'
     | '/opac/$id'
+    | '/patrons/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +162,10 @@ export interface FileRouteTypes {
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/acquisitions/$id'
+    | '/cataloging/$id'
     | '/opac/$id'
+    | '/patrons/$id'
   id:
     | '__root__'
     | '/'
@@ -144,19 +177,23 @@ export interface FileRouteTypes {
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/acquisitions/$id'
+    | '/cataloging/$id'
     | '/opac/$id'
+    | '/patrons/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AcquisitionsRoute: typeof AcquisitionsRoute
+  AcquisitionsRoute: typeof AcquisitionsRouteWithChildren
   AdminRoute: typeof AdminRoute
-  CatalogingRoute: typeof CatalogingRoute
+  CatalogingRoute: typeof CatalogingRouteWithChildren
   CirculationRoute: typeof CirculationRoute
   LoginRoute: typeof LoginRoute
   OpacRoute: typeof OpacRouteWithChildren
   ReportsRoute: typeof ReportsRoute
   SerialsRoute: typeof SerialsRoute
+  PatronsIdRoute: typeof PatronsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/patrons/$id': {
+      id: '/patrons/$id'
+      path: '/patrons/$id'
+      fullPath: '/patrons/$id'
+      preLoaderRoute: typeof PatronsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/opac/$id': {
       id: '/opac/$id'
       path: '/$id'
@@ -231,8 +275,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OpacIdRouteImport
       parentRoute: typeof OpacRoute
     }
+    '/cataloging/$id': {
+      id: '/cataloging/$id'
+      path: '/$id'
+      fullPath: '/cataloging/$id'
+      preLoaderRoute: typeof CatalogingIdRouteImport
+      parentRoute: typeof CatalogingRoute
+    }
+    '/acquisitions/$id': {
+      id: '/acquisitions/$id'
+      path: '/$id'
+      fullPath: '/acquisitions/$id'
+      preLoaderRoute: typeof AcquisitionsIdRouteImport
+      parentRoute: typeof AcquisitionsRoute
+    }
   }
 }
+
+interface AcquisitionsRouteChildren {
+  AcquisitionsIdRoute: typeof AcquisitionsIdRoute
+}
+
+const AcquisitionsRouteChildren: AcquisitionsRouteChildren = {
+  AcquisitionsIdRoute: AcquisitionsIdRoute,
+}
+
+const AcquisitionsRouteWithChildren = AcquisitionsRoute._addFileChildren(
+  AcquisitionsRouteChildren,
+)
+
+interface CatalogingRouteChildren {
+  CatalogingIdRoute: typeof CatalogingIdRoute
+}
+
+const CatalogingRouteChildren: CatalogingRouteChildren = {
+  CatalogingIdRoute: CatalogingIdRoute,
+}
+
+const CatalogingRouteWithChildren = CatalogingRoute._addFileChildren(
+  CatalogingRouteChildren,
+)
 
 interface OpacRouteChildren {
   OpacIdRoute: typeof OpacIdRoute
@@ -246,14 +328,15 @@ const OpacRouteWithChildren = OpacRoute._addFileChildren(OpacRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AcquisitionsRoute: AcquisitionsRoute,
+  AcquisitionsRoute: AcquisitionsRouteWithChildren,
   AdminRoute: AdminRoute,
-  CatalogingRoute: CatalogingRoute,
+  CatalogingRoute: CatalogingRouteWithChildren,
   CirculationRoute: CirculationRoute,
   LoginRoute: LoginRoute,
   OpacRoute: OpacRouteWithChildren,
   ReportsRoute: ReportsRoute,
   SerialsRoute: SerialsRoute,
+  PatronsIdRoute: PatronsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

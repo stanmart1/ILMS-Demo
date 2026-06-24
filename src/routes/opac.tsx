@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { PageShell } from "@/components/page-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,8 +23,41 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { bibRecords, checkouts, holds } from "@/lib/mock-data";
-import type { Hold } from "@/lib/mock-data";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  bibRecords,
+  checkouts,
+  holds,
+  patrons,
+  fines as allFines,
+} from "@/lib/mock-data";
+import type { Hold, Patron } from "@/lib/mock-data";
 import {
   DataPagination,
   usePagination,
@@ -35,6 +71,11 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
+  LogOut,
+  Plus,
+  Trash2,
+  X,
+  ListPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,8 +84,104 @@ export const Route = createFileRoute("/opac")({
   component: OPAC,
 });
 
-const PATRON_NAME = "Eleanor Voss";
+// ── Patron login schema ────────────────────────────────────────────────────
+const loginSchema = z.object({
+  cardNumber: z.string().min(1, "Card number is required"),
+  pin: z.string().min(4, "PIN must be at least 4 characters"),
+});
+type LoginForm = z.infer<typeof loginSchema>;
 
+// ── Reading list type ──────────────────────────────────────────────────────
+type ReadingList = { id: string; name: string; items: string[] };
+
+// ── PatronLoginDialog ──────────────────────────────────────────────────────
+function PatronLoginDialog({
+  open,
+  onOpenChange,
+  onLogin,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onLogin: (patron: Patron) => void;
+}) {
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { cardNumber: "", pin: "" },
+  });
+
+  function handleOpenChange(value: boolean) {
+    if (!value) form.reset();
+    onOpenChange(value);
+  }
+
+  function handleSubmit(values: LoginForm) {
+    const patron = patrons.find((p) => p.cardNumber === values.cardNumber);
+    if (!patron) {
+      form.setError("cardNumber", { message: "Card number not found" });
+      return;
+    }
+    if (values.pin !== "1234") {
+      form.setError("pin", { message: "Incorrect PIN" });
+      return;
+    }
+    onLogin(patron);
+    form.reset();
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Sign in to your account</DialogTitle>
+          <DialogDescription>
+            Enter your library card number and PIN to access your account.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="cardNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Card number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. C-100245" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>PIN</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" className="w-full">
+                Sign in
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Main OPAC component ────────────────────────────────────────────────────
 function OPAC() {
   // ── Main search ────────────────────────────────────────────────────────
   const [q, setQ] = useState("");
@@ -68,12 +205,42 @@ function OPAC() {
     pageSize: 5,
   });
 
+  // ── Auth ───────────────────────────────────────────────────────────────
+  const [opacPatron, setOpacPatron] = useState<Patron | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
+
   // ── My Account sheet ───────────────────────────────────────────────────
   const [accountOpen, setAccountOpen] = useState(false);
-  const [localHolds, setLocalHolds] = useState<Hold[]>(
-    holds.filter((h) => h.patron === PATRON_NAME),
-  );
-  const myLoans = checkouts.filter((c) => c.patron === PATRON_NAME);
+  const [localHolds, setLocalHolds] = useState<Hold[]>([]);
+
+  // ── My lists (Bookshelves) ─────────────────────────────────────────────
+  const [lists, setLists] = useState<ReadingList[]>([
+    { id: "l1", name: "Want to read", items: ["Sapiens", "Educated"] },
+    { id: "l2", name: "Finished", items: ["The Sympathizer"] },
+  ]);
+  const [addingList, setAddingList] = useState(false);
+  const [newListName, setNewListName] = useState("");
+
+  // Sync holds when patron changes
+  useEffect(() => {
+    setLocalHolds(
+      opacPatron ? holds.filter((h) => h.patron === opacPatron.name) : [],
+    );
+  }, [opacPatron]);
+
+  // Derived patron data
+  const myLoans = opacPatron
+    ? checkouts.filter((c) => c.patron === opacPatron.name)
+    : [];
+  const myHistory = opacPatron
+    ? checkouts.filter((c) => c.patron === opacPatron.name)
+    : [];
+  const myFines = opacPatron
+    ? allFines.filter((f) => f.patronId === opacPatron.id)
+    : [];
+  const outstandingTotal = myFines
+    .filter((f) => !f.paid)
+    .reduce((sum, f) => sum + f.amount, 0);
 
   // Reset to page 1 whenever any filter or sort changes
   useEffect(() => {
@@ -147,18 +314,61 @@ function OPAC() {
   const startIdx = total === 0 ? 0 : (page - 1) * pagination.pageSize + 1;
   const endIdx = Math.min(page * pagination.pageSize, total);
 
+  // ── List helpers ───────────────────────────────────────────────────────
+  function addToList(listId: string, title: string) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId && !l.items.includes(title)
+          ? { ...l, items: [...l.items, title] }
+          : l,
+      ),
+    );
+    const listName = lists.find((l) => l.id === listId)?.name ?? "list";
+    toast.success(`"${title}" added to "${listName}"`);
+  }
+
+  function confirmNewList() {
+    const name = newListName.trim();
+    if (!name) return;
+    setLists((prev) => [
+      ...prev,
+      { id: `l${Date.now()}`, name, items: [] },
+    ]);
+    setNewListName("");
+    setAddingList(false);
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <PageShell
       title="Public catalog (OPAC)"
       description="What patrons see when they search the collection."
       actions={
-        <Button variant="outline" onClick={() => setAccountOpen(true)}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (opacPatron) {
+              setAccountOpen(true);
+            } else {
+              setLoginOpen(true);
+            }
+          }}
+        >
           <User className="mr-1.5 h-4 w-4" />
-          My Account
+          {opacPatron ? `My Account (${opacPatron.name})` : "Sign in"}
         </Button>
       }
     >
+      {/* ── Patron login dialog ─────────────────────────────────────────── */}
+      <PatronLoginDialog
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onLogin={(patron) => {
+          setOpacPatron(patron);
+          toast.success(`Welcome back, ${patron.name}!`);
+        }}
+      />
+
       {/* ── Search hero ────────────────────────────────────────────────── */}
       <Card className="bg-primary text-primary-foreground border-0">
         <CardContent className="py-10">
@@ -481,6 +691,31 @@ function OPAC() {
                       Details
                     </Link>
                   </Button>
+                  {/* Add to list dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        <ListPlus className="mr-1.5 h-3.5 w-3.5" />
+                        Add to list
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {lists.length === 0 ? (
+                        <DropdownMenuItem disabled>
+                          No lists — create one in My Account
+                        </DropdownMenuItem>
+                      ) : (
+                        lists.map((list) => (
+                          <DropdownMenuItem
+                            key={list.id}
+                            onClick={() => addToList(list.id, b.title)}
+                          >
+                            {list.name}
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardContent>
             </Card>
@@ -511,43 +746,287 @@ function OPAC() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              {PATRON_NAME}
+              {opacPatron ? opacPatron.name : "My Account"}
             </SheetTitle>
             <SheetDescription>
-              Your loans and holds at Athenaeum Library.
+              {opacPatron ? (
+                <span className="flex items-center gap-2">
+                  <span className="font-mono">{opacPatron.cardNumber}</span>
+                  <span>·</span>
+                  <Badge
+                    variant={
+                      opacPatron.status === "Active"
+                        ? "default"
+                        : opacPatron.status === "Suspended"
+                          ? "destructive"
+                          : "outline"
+                    }
+                    className="text-[10px]"
+                  >
+                    {opacPatron.status}
+                  </Badge>
+                  <span>·</span>
+                  <span>{opacPatron.category}</span>
+                </span>
+              ) : (
+                "Your loans and holds at Athenaeum Library."
+              )}
             </SheetDescription>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6">
-            {/* My Loans */}
-            <section>
-              <h3 className="mb-3 font-serif text-base font-semibold">
-                My loans
-              </h3>
-              {myLoans.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No active loans.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {myLoans.map((loan) => (
-                    <div
-                      key={loan.id}
-                      className="rounded-lg border border-border p-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{loan.title}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            Due {loan.dueDate}
-                          </p>
-                          <div className="mt-1">
-                            {loan.status === "Overdue" ? (
+          {/* Guard: not signed in */}
+          {!opacPatron ? (
+            <div className="mt-10 flex flex-col items-center gap-3 text-center">
+              <User className="h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">
+                Sign in to view your account.
+              </p>
+              <Button
+                onClick={() => {
+                  setAccountOpen(false);
+                  setLoginOpen(true);
+                }}
+              >
+                Sign in
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-6">
+              {/* ── My Loans ──────────────────────────────────────────── */}
+              <section>
+                <h3 className="mb-3 font-serif text-base font-semibold">
+                  My loans
+                </h3>
+                {myLoans.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No active loans.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {myLoans.map((loan) => (
+                      <div
+                        key={loan.id}
+                        className="rounded-lg border border-border p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium">{loan.title}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Due {loan.dueDate}
+                            </p>
+                            <div className="mt-1">
+                              {loan.status === "Overdue" ? (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-[10px]"
+                                >
+                                  Overdue
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-success text-success-foreground text-[10px]">
+                                  On loan
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0"
+                            onClick={() =>
+                              toast.success(
+                                `"${loan.title}" renewed — new due date in 28 days.`,
+                              )
+                            }
+                          >
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                            Renew
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <Separator />
+
+              {/* ── My Holds ──────────────────────────────────────────── */}
+              <section>
+                <h3 className="mb-3 font-serif text-base font-semibold">
+                  My holds
+                </h3>
+                {localHolds.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No active holds.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {localHolds.map((hold) => (
+                      <div
+                        key={hold.id}
+                        className="rounded-lg border border-border p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium">{hold.title}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {hold.pickupBranch} · Position {hold.position}
+                            </p>
+                            <div className="mt-1">
+                              <Badge
+                                variant={
+                                  hold.status === "Ready for pickup"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className={
+                                  hold.status === "In transit"
+                                    ? "border-warning text-warning"
+                                    : undefined
+                                }
+                              >
+                                {hold.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => {
+                              setLocalHolds((prev) =>
+                                prev.filter((h) => h.id !== hold.id),
+                              );
+                              toast.info(
+                                `Hold on "${hold.title}" cancelled.`,
+                              );
+                            }}
+                          >
+                            Cancel hold
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <Separator />
+
+              {/* ── My Fines ──────────────────────────────────────────── */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-serif text-base font-semibold">
+                    My fines
+                  </h3>
+                  {outstandingTotal > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      Outstanding: ${outstandingTotal.toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+                {myFines.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No outstanding fines.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {myFines.map((fine) => (
+                      <div
+                        key={fine.id}
+                        className="rounded-lg border border-border p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {fine.itemTitle}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {fine.date}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <Badge variant="outline" className="text-[10px]">
+                              {fine.type}
+                            </Badge>
+                            <span className="text-sm font-semibold">
+                              ${fine.amount.toFixed(2)}
+                            </span>
+                            {fine.paid ? (
+                              <Badge className="bg-success text-success-foreground text-[10px]">
+                                Paid
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="destructive"
+                                className="text-[10px]"
+                              >
+                                Outstanding
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <Separator />
+
+              {/* ── Reading history ───────────────────────────────────── */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-serif text-base font-semibold">
+                    Reading history
+                  </h3>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => toast.info("Reading history cleared")}
+                  >
+                    Clear history
+                  </Button>
+                </div>
+                {myHistory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No reading history.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {myHistory.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-lg border border-border p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {item.title}
+                            </p>
+                            <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                              {item.barcode}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Out: {item.checkedOut} · Due: {item.dueDate}
+                            </p>
+                          </div>
+                          <div className="shrink-0">
+                            {item.status === "Overdue" ? (
                               <Badge
                                 variant="destructive"
                                 className="text-[10px]"
                               >
                                 Overdue
+                              </Badge>
+                            ) : item.status === "Returned" ? (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px]"
+                              >
+                                Returned
                               </Badge>
                             ) : (
                               <Badge className="bg-success text-success-foreground text-[10px]">
@@ -556,89 +1035,172 @@ function OPAC() {
                             )}
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0"
-                          onClick={() =>
-                            toast.success(
-                              `"${loan.title}" renewed — new due date in 28 days.`,
-                            )
-                          }
-                        >
-                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                          Renew
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <Separator />
+
+              {/* ── My lists (Bookshelves) ────────────────────────────── */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-serif text-base font-semibold">
+                    My lists
+                  </h3>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setAddingList(true)}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    New list
+                  </Button>
                 </div>
-              )}
-            </section>
 
-            <Separator />
-
-            {/* My Holds */}
-            <section>
-              <h3 className="mb-3 font-serif text-base font-semibold">
-                My holds
-              </h3>
-              {localHolds.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No active holds.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {localHolds.map((hold) => (
-                    <div
-                      key={hold.id}
-                      className="rounded-lg border border-border p-3"
+                {/* Inline new-list input */}
+                {addingList && (
+                  <div className="mb-3 flex gap-2">
+                    <Input
+                      value={newListName}
+                      onChange={(e) => setNewListName(e.target.value)}
+                      placeholder="List name…"
+                      className="h-8 text-sm"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") confirmNewList();
+                        if (e.key === "Escape") {
+                          setNewListName("");
+                          setAddingList(false);
+                        }
+                      }}
+                    />
+                    <Button size="sm" className="h-8" onClick={confirmNewList}>
+                      Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8"
+                      onClick={() => {
+                        setNewListName("");
+                        setAddingList(false);
+                      }}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{hold.title}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {hold.pickupBranch} · Position {hold.position}
-                          </p>
-                          <div className="mt-1">
-                            <Badge
-                              variant={
-                                hold.status === "Ready for pickup"
-                                  ? "default"
-                                  : "outline"
-                              }
-                              className={
-                                hold.status === "In transit"
-                                  ? "border-warning text-warning"
-                                  : undefined
-                              }
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {lists.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No lists yet. Create one!
+                    </p>
+                  )}
+                  {lists.map((list) => (
+                    <Collapsible key={list.id} defaultOpen>
+                      <div className="rounded-lg border border-border">
+                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-t-lg px-3 py-2.5 text-sm font-medium hover:bg-muted/50">
+                          <span>
+                            {list.name}{" "}
+                            <span className="font-normal text-muted-foreground">
+                              ({list.items.length})
+                            </span>
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded text-destructive hover:bg-destructive/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLists((prev) =>
+                                  prev.filter((l) => l.id !== list.id),
+                                );
+                                toast.info(`"${list.name}" deleted.`);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.stopPropagation();
+                                  setLists((prev) =>
+                                    prev.filter((l) => l.id !== list.id),
+                                  );
+                                  toast.info(`"${list.name}" deleted.`);
+                                }
+                              }}
                             >
-                              {hold.status}
-                            </Badge>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </span>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => {
-                            setLocalHolds((prev) =>
-                              prev.filter((h) => h.id !== hold.id),
-                            );
-                            toast.info(
-                              `Hold on "${hold.title}" cancelled.`,
-                            );
-                          }}
-                        >
-                          Cancel hold
-                        </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          {list.items.length === 0 ? (
+                            <p className="px-3 pb-3 pt-1 text-xs text-muted-foreground">
+                              No items yet.
+                            </p>
+                          ) : (
+                            <ul className="divide-y divide-border">
+                              {list.items.map((item, idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex items-center justify-between px-3 py-1.5 text-sm"
+                                >
+                                  <span>{item}</span>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                    onClick={() =>
+                                      setLists((prev) =>
+                                        prev.map((l) =>
+                                          l.id === list.id
+                                            ? {
+                                                ...l,
+                                                items: l.items.filter(
+                                                  (_, i) => i !== idx,
+                                                ),
+                                              }
+                                            : l,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </CollapsibleContent>
                       </div>
-                    </div>
+                    </Collapsible>
                   ))}
                 </div>
-              )}
-            </section>
-          </div>
+              </section>
+
+              <Separator />
+
+              {/* ── Sign out ──────────────────────────────────────────── */}
+              <div className="pb-4">
+                <Button
+                  variant="ghost"
+                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => {
+                    setOpacPatron(null);
+                    setAccountOpen(false);
+                    toast.info("You have been signed out.");
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </Button>
+              </div>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
     </PageShell>

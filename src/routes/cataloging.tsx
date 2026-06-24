@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -67,6 +67,8 @@ import {
   Upload,
   Download,
   Plus,
+  Eye,
+  Printer,
 } from "lucide-react";
 
 export const Route = createFileRoute("/cataloging")({
@@ -229,6 +231,48 @@ const bibSchema = z.object({
 });
 
 type BibFormValues = z.infer<typeof bibSchema>;
+
+// ── Authority types and inline mock data ─────────────────────────────────────
+
+type Authority = {
+  id: string;
+  type: "Name" | "Subject" | "Corporate" | "Geographic";
+  heading: string;
+  variants: string[];
+  linkedBibs: number;
+  source: "LCNAF" | "LCSH" | "Local";
+  lastUpdated: string;
+};
+
+const defaultAuthorities: Authority[] = [
+  { id: "a1", type: "Name", heading: "Nguyen, Viet Thanh, 1971-", variants: ["Nguyen, V. T.", "Việt Thanh Nguyễn"], linkedBibs: 1, source: "LCNAF", lastUpdated: "2026-01-10" },
+  { id: "a2", type: "Name", heading: "Harari, Yuval Noah", variants: ["Harari, Y. N."], linkedBibs: 1, source: "LCNAF", lastUpdated: "2026-02-14" },
+  { id: "a3", type: "Subject", heading: "Vietnam War, 1961-1975 -- Fiction", variants: [], linkedBibs: 1, source: "LCSH", lastUpdated: "2025-11-20" },
+  { id: "a4", type: "Subject", heading: "Cognitive psychology", variants: ["Psychology, Cognitive"], linkedBibs: 1, source: "LCSH", lastUpdated: "2025-09-05" },
+  { id: "a5", type: "Subject", heading: "Human evolution", variants: ["Evolution (Biology)"], linkedBibs: 1, source: "LCSH", lastUpdated: "2026-03-01" },
+  { id: "a6", type: "Geographic", heading: "France -- Paris", variants: ["Paris (France)"], linkedBibs: 0, source: "LCSH", lastUpdated: "2025-07-22" },
+  { id: "a7", type: "Corporate", heading: "United Nations", variants: ["UN", "Nations Unies"], linkedBibs: 0, source: "LCNAF", lastUpdated: "2025-12-15" },
+  { id: "a8", type: "Name", heading: "Kahneman, Daniel", variants: [], linkedBibs: 1, source: "LCNAF", lastUpdated: "2026-01-30" },
+];
+
+// ── Print item type ───────────────────────────────────────────────────────────
+
+type PrintItem = {
+  barcode: string;
+  title: string;
+  callNumber: string;
+};
+
+// ── Authority schema ──────────────────────────────────────────────────────────
+
+const authoritySchema = z.object({
+  type: z.enum(["Name", "Subject", "Corporate", "Geographic"]),
+  heading: z.string().min(1, "Heading is required"),
+  variants: z.string(),
+  source: z.enum(["LCNAF", "LCSH", "Local"]),
+});
+
+type AuthorityFormValues = z.infer<typeof authoritySchema>;
 
 // ── Bib record dialog ────────────────────────────────────────────────────────
 
@@ -536,6 +580,474 @@ function ImportMarcDialog({
   );
 }
 
+// ── Print label dialog ────────────────────────────────────────────────────────
+
+function PrintLabelDialog({
+  open,
+  onOpenChange,
+  items,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  items: PrintItem[];
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const style = document.createElement("style");
+    style.id = "print-label-style";
+    style.textContent =
+      "@media print { body > *:not(#print-area) { display: none !important; } }";
+    document.head.appendChild(style);
+    return () => {
+      document.getElementById("print-label-style")?.remove();
+    };
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-serif">
+            {items.length === 1
+              ? "Print item label"
+              : `Print ${items.length} label${items.length !== 1 ? "s" : ""}`}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div
+          id="print-area"
+          className="max-h-[60vh] overflow-y-auto space-y-4 py-2"
+        >
+          {items.map((item) => (
+            <div
+              key={item.barcode}
+              className="border border-border rounded w-40 mx-auto text-center bg-white shadow-sm"
+            >
+              {/* Call number — top */}
+              <div className="bg-muted/60 px-2 py-1.5 border-b border-border">
+                <p className="font-mono text-xs font-bold leading-tight break-all">
+                  {item.callNumber}
+                </p>
+              </div>
+              {/* Title — middle */}
+              <div className="px-2 py-1.5 border-b border-border">
+                <p className="text-xs leading-tight line-clamp-2 text-foreground">
+                  {item.title}
+                </p>
+              </div>
+              {/* Barcode — bottom */}
+              <div className="px-2 py-1.5">
+                <p className="font-mono text-xs tracking-widest text-foreground">
+                  {item.barcode}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          <Button onClick={() => window.print()}>
+            <Printer className="mr-1.5 h-4 w-4" />
+            Print
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Authority dialog ──────────────────────────────────────────────────────────
+
+function AuthorityDialog({
+  open,
+  onOpenChange,
+  editing,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  editing: Authority | null;
+  onSave: (data: AuthorityFormValues, id: string | null) => void;
+}) {
+  const form = useForm<AuthorityFormValues>({
+    resolver: zodResolver(authoritySchema),
+    defaultValues: { type: "Name", heading: "", variants: "", source: "LCNAF" },
+  });
+
+  // Sync form values whenever the dialog opens or the editing target changes
+  useEffect(() => {
+    if (open) {
+      form.reset(
+        editing
+          ? {
+              type: editing.type,
+              heading: editing.heading,
+              variants: editing.variants.join(", "),
+              source: editing.source,
+            }
+          : { type: "Name", heading: "", variants: "", source: "LCNAF" }
+      );
+    }
+  }, [open, editing, form]);
+
+  const handleOpenChange = (v: boolean) => {
+    if (!v)
+      form.reset({ type: "Name", heading: "", variants: "", source: "LCNAF" });
+    onOpenChange(v);
+  };
+
+  function onSubmit(values: AuthorityFormValues) {
+    onSave(values, editing?.id ?? null);
+    form.reset({ type: "Name", heading: "", variants: "", source: "LCNAF" });
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-serif">
+            {editing ? "Edit authority" : "New authority"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Name">Name</SelectItem>
+                        <SelectItem value="Subject">Subject</SelectItem>
+                        <SelectItem value="Corporate">Corporate</SelectItem>
+                        <SelectItem value="Geographic">Geographic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="LCNAF">LCNAF</SelectItem>
+                        <SelectItem value="LCSH">LCSH</SelectItem>
+                        <SelectItem value="Local">Local</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="heading"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel>Heading</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Authorized form of the name or term"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="variants"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel>
+                      Variants (comma-separated, optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Alternate forms, cross-references…"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editing ? "Save changes" : "Create authority"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Authorities tab ───────────────────────────────────────────────────────────
+
+const AUTHORITY_TYPE_FILTERS = [
+  "All",
+  "Name",
+  "Subject",
+  "Corporate",
+  "Geographic",
+] as const;
+type AuthorityTypeFilter = (typeof AUTHORITY_TYPE_FILTERS)[number];
+
+function AuthoritiesTab() {
+  const [authorities, setAuthorities] =
+    useState<Authority[]>(defaultAuthorities);
+  const [authSearch, setAuthSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<AuthorityTypeFilter>("All");
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [editingAuth, setEditingAuth] = useState<Authority | null>(null);
+  const [deleteAuthTarget, setDeleteAuthTarget] = useState<Authority | null>(
+    null
+  );
+
+  const filteredAuths = authorities.filter((a) => {
+    const q = authSearch.toLowerCase();
+    const matchesSearch =
+      !q ||
+      a.heading.toLowerCase().includes(q) ||
+      a.variants.some((v) => v.toLowerCase().includes(q));
+    const matchesType = typeFilter === "All" || a.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  function handleSaveAuth(data: AuthorityFormValues, id: string | null) {
+    const variantList = data.variants
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const today = new Date().toISOString().split("T")[0];
+    if (id) {
+      setAuthorities((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                type: data.type,
+                heading: data.heading,
+                variants: variantList,
+                source: data.source,
+                lastUpdated: today,
+              }
+            : a
+        )
+      );
+      toast.success("Authority updated");
+    } else {
+      const newAuth: Authority = {
+        id: `a-${Date.now()}`,
+        type: data.type,
+        heading: data.heading,
+        variants: variantList,
+        linkedBibs: 0,
+        source: data.source,
+        lastUpdated: today,
+      };
+      setAuthorities((prev) => [...prev, newAuth]);
+      toast.success("Authority created");
+    }
+  }
+
+  function handleDeleteAuth() {
+    if (!deleteAuthTarget) return;
+    setAuthorities((prev) =>
+      prev.filter((a) => a.id !== deleteAuthTarget.id)
+    );
+    toast.success("Authority deleted");
+    setDeleteAuthTarget(null);
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search + type filter chips + new authority button */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Input
+          className="flex-1 min-w-[220px]"
+          placeholder="Search heading or variants…"
+          value={authSearch}
+          onChange={(e) => setAuthSearch(e.target.value)}
+        />
+        <div className="flex flex-wrap gap-1.5">
+          {AUTHORITY_TYPE_FILTERS.map((t) => (
+            <Button
+              key={t}
+              size="sm"
+              variant={typeFilter === t ? "default" : "outline"}
+              onClick={() => setTypeFilter(t)}
+            >
+              {t}
+            </Button>
+          ))}
+        </div>
+        <Button
+          onClick={() => {
+            setEditingAuth(null);
+            setAuthDialogOpen(true);
+          }}
+        >
+          <Plus className="mr-1.5 h-4 w-4" />
+          New authority
+        </Button>
+      </div>
+
+      {/* Authorities table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Heading</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Variants</TableHead>
+                <TableHead>Linked bibs</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead>Last updated</TableHead>
+                <TableHead className="w-20" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAuths.map((a) => (
+                <TableRow key={a.id}>
+                  <TableCell className="font-medium max-w-[240px]">
+                    {a.heading}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{a.type}</Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">
+                    {a.variants.length > 0 ? (
+                      a.variants.join(", ")
+                    ) : (
+                      <span className="italic">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{a.linkedBibs}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{a.source}</Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {a.lastUpdated}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setEditingAuth(a);
+                          setAuthDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => setDeleteAuthTarget(a)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredAuths.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="py-8 text-center text-sm text-muted-foreground"
+                  >
+                    No authorities match your search.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Authority dialog */}
+      <AuthorityDialog
+        open={authDialogOpen}
+        onOpenChange={(v) => {
+          setAuthDialogOpen(v);
+          if (!v) setEditingAuth(null);
+        }}
+        editing={editingAuth}
+        onSave={handleSaveAuth}
+      />
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteAuthTarget}
+        onOpenChange={(v) => !v && setDeleteAuthTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this authority?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deleteAuthTarget?.heading}</strong> will be permanently
+              removed. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteAuth}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 // ── Holdings tab ─────────────────────────────────────────────────────────────
 
 function HoldingsTab({
@@ -548,11 +1060,22 @@ function HoldingsTab({
   onHoldingsChange: (map: HoldingsMap) => void;
 }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printDialogItems, setPrintDialogItems] = useState<PrintItem[]>([]);
 
   function toggle(id: string) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleItemSelect(itemId: string) {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      next.has(itemId) ? next.delete(itemId) : next.add(itemId);
       return next;
     });
   }
@@ -575,6 +1098,11 @@ function HoldingsTab({
       return;
     const updated = (holdings[recordId] ?? []).filter((i) => i.id !== itemId);
     onHoldingsChange({ ...holdings, [recordId]: updated });
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      next.delete(itemId);
+      return next;
+    });
   }
 
   function updateItemField(
@@ -589,8 +1117,50 @@ function HoldingsTab({
     onHoldingsChange({ ...holdings, [recordId]: updated });
   }
 
+  function openPrintSingle(record: BibRecord, item: HoldingItem) {
+    setPrintDialogItems([
+      {
+        barcode: item.barcode,
+        title: record.title,
+        callNumber: record.callNumber,
+      },
+    ]);
+    setPrintDialogOpen(true);
+  }
+
+  function openPrintSelected() {
+    const items: PrintItem[] = [];
+    records.forEach((record) => {
+      (holdings[record.id] ?? []).forEach((item) => {
+        if (selectedItems.has(item.id)) {
+          items.push({
+            barcode: item.barcode,
+            title: record.title,
+            callNumber: record.callNumber,
+          });
+        }
+      });
+    });
+    setPrintDialogItems(items);
+    setPrintDialogOpen(true);
+  }
+
   return (
     <div className="space-y-3">
+      {/* Print selected toolbar */}
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={selectedItems.size === 0}
+          onClick={openPrintSelected}
+        >
+          <Printer className="mr-1.5 h-3.5 w-3.5" />
+          Print selected
+          {selectedItems.size > 0 ? ` (${selectedItems.size})` : ""}
+        </Button>
+      </div>
+
       {records.map((record) => {
         const items = holdings[record.id] ?? [];
         const isOpen = expandedIds.has(record.id);
@@ -633,6 +1203,9 @@ function HoldingsTab({
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-8">
+                              <span className="sr-only">Select</span>
+                            </TableHead>
                             <TableHead className="font-mono text-xs">
                               Barcode
                             </TableHead>
@@ -640,12 +1213,21 @@ function HoldingsTab({
                             <TableHead>Location</TableHead>
                             <TableHead>Item type</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="w-12" />
+                            <TableHead className="w-20" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {items.map((item) => (
                             <TableRow key={item.id}>
+                              <TableCell>
+                                <input
+                                  type="checkbox"
+                                  aria-label="Select item"
+                                  className="h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                                  checked={selectedItems.has(item.id)}
+                                  onChange={() => toggleItemSelect(item.id)}
+                                />
+                              </TableCell>
                               <TableCell className="font-mono text-xs">
                                 {item.barcode}
                               </TableCell>
@@ -736,16 +1318,29 @@ function HoldingsTab({
                                 </Select>
                               </TableCell>
                               <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() =>
-                                    deleteCopy(record.id, item.id)
-                                  }
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                                <div className="flex items-center gap-0.5 justify-end">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    title="Print label"
+                                    onClick={() =>
+                                      openPrintSingle(record, item)
+                                    }
+                                  >
+                                    <Printer className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                    onClick={() =>
+                                      deleteCopy(record.id, item.id)
+                                    }
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -769,6 +1364,12 @@ function HoldingsTab({
           </Card>
         );
       })}
+
+      <PrintLabelDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        items={printDialogItems}
+      />
     </div>
   );
 }
@@ -962,6 +1563,7 @@ function Cataloging() {
             <TabsTrigger value="editor">MARC editor</TabsTrigger>
             <TabsTrigger value="z3950">Z39.50 / SRU</TabsTrigger>
             <TabsTrigger value="holdings">Holdings</TabsTrigger>
+            <TabsTrigger value="authorities">Authorities</TabsTrigger>
           </TabsList>
 
           {/* ── Catalog tab ── */}
@@ -1049,6 +1651,17 @@ function Cataloging() {
                           className="pr-3"
                         >
                           <div className="flex items-center gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              title="View"
+                              asChild
+                            >
+                              <Link to="/cataloging/$id" params={{ id: b.id }}>
+                                <Eye className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1255,6 +1868,11 @@ function Cataloging() {
               holdings={holdings}
               onHoldingsChange={setHoldings}
             />
+          </TabsContent>
+
+          {/* ── Authorities tab ── */}
+          <TabsContent value="authorities" className="mt-4">
+            <AuthoritiesTab />
           </TabsContent>
         </Tabs>
       </div>

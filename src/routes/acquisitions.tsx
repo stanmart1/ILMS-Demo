@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { purchaseOrders as initPOs, vendors as initVendors, budgets as initBudgets, invoices as initInvoices } from "@/lib/mock-data";
 import type { PurchaseOrder, Vendor, Budget, Invoice } from "@/lib/mock-data";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, ArrowLeftRight, PackageCheck } from "lucide-react";
+import { Pencil, Plus, Trash2, ArrowLeftRight, PackageCheck, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/acquisitions")({
   head: () => ({ meta: [{ title: "Acquisitions — Athenaeum" }] }),
@@ -881,16 +881,29 @@ function Acquisitions() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {p.status === "Submitted" && (
+                          <div className="flex items-center gap-1">
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setReceivePOId(p.id)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              title="View order"
+                              asChild
                             >
-                              <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
-                              Receive
+                              <Link to="/acquisitions/$id" params={{ id: p.id }}>
+                                <Eye className="h-3.5 w-3.5" />
+                              </Link>
                             </Button>
-                          )}
+                            {p.status === "Submitted" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setReceivePOId(p.id)}
+                              >
+                                <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
+                                Receive
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

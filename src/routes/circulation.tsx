@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { checkouts as initialCheckouts, holds as initialHolds, patrons, fines as initialFines } from "@/lib/mock-data";
 import type { Checkout, Hold, Fine } from "@/lib/mock-data";
 import { toast } from "sonner";
-import { BookOpen, RotateCcw, RefreshCw, Bookmark, Search, User, DollarSign, X, AlertTriangle } from "lucide-react";
+import { BookOpen, RotateCcw, RefreshCw, Bookmark, Search, User, DollarSign, X, AlertTriangle, ArrowRightLeft, SendHorizonal, CheckCircle2 } from "lucide-react";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/circulation")({
@@ -261,6 +261,124 @@ function PayFineDialog({ fine, open, onClose, onPay }: {
   );
 }
 
+// ─── Transit management ───────────────────────────────────────────────────────
+type TransitItem = {
+  id: string;
+  barcode: string;
+  title: string;
+  fromBranch: string;
+  toBranch: string;
+  sentDate: string;
+  reason: "Hold" | "Transfer" | "Return";
+  holdFor?: string;
+  status: "In transit" | "Received";
+};
+
+const initialTransit: TransitItem[] = [
+  { id: "tr1", barcode: "31901-00045", title: "The Sympathizer", fromBranch: "Riverside", toBranch: "Central", sentDate: "2026-06-22", reason: "Hold", holdFor: "Eleanor Voss", status: "In transit" },
+  { id: "tr2", barcode: "31901-00203", title: "Thinking, Fast and Slow", fromBranch: "Central", toBranch: "North Hill", sentDate: "2026-06-21", reason: "Transfer", status: "In transit" },
+  { id: "tr3", barcode: "31901-00510", title: "The Midnight Library", fromBranch: "North Hill", toBranch: "Central", sentDate: "2026-06-20", reason: "Hold", holdFor: "Marcus Holloway", status: "Received" },
+];
+
+const sendItemSchema = z.object({
+  barcode: z.string().min(1, "Barcode required"),
+  title: z.string().min(1, "Title required"),
+  fromBranch: z.string().min(1, "Select origin branch"),
+  toBranch: z.string().min(1, "Select destination branch"),
+  reason: z.enum(["Hold", "Transfer", "Return"]),
+  holdFor: z.string().optional(),
+});
+type SendItemForm = z.infer<typeof sendItemSchema>;
+
+function SendItemDialog({ open, onClose, onSend }: { open: boolean; onClose: () => void; onSend: (item: TransitItem) => void }) {
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<SendItemForm>({
+    resolver: zodResolver(sendItemSchema),
+    defaultValues: { reason: "Transfer" },
+  });
+  const reason = watch("reason");
+
+  const onSubmit = (data: SendItemForm) => {
+    if (data.fromBranch === data.toBranch) { toast.error("Origin and destination must differ"); return; }
+    const item: TransitItem = {
+      id: `tr${Date.now()}`,
+      barcode: data.barcode,
+      title: data.title,
+      fromBranch: data.fromBranch,
+      toBranch: data.toBranch,
+      sentDate: new Date().toISOString().slice(0, 10),
+      reason: data.reason,
+      holdFor: data.holdFor,
+      status: "In transit",
+    };
+    onSend(item);
+    toast.success(`Item sent to ${data.toBranch}`);
+    reset();
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle className="font-serif">Send item in transit</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Barcode</Label>
+              <Input {...register("barcode")} placeholder="31901-xxxxx" className="mono" />
+              {errors.barcode && <p className="text-xs text-destructive mt-1">{errors.barcode.message}</p>}
+            </div>
+            <div>
+              <Label>Title</Label>
+              <Input {...register("title")} placeholder="Item title" />
+              {errors.title && <p className="text-xs text-destructive mt-1">{errors.title.message}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>From branch</Label>
+              <Select onValueChange={() => {}}>
+                <SelectTrigger><SelectValue placeholder="Origin" /></SelectTrigger>
+                <SelectContent>{["Central", "Riverside", "North Hill", "Eastside Annex"].map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+              </Select>
+              <input type="hidden" {...register("fromBranch")} defaultValue="Central" />
+            </div>
+            <div>
+              <Label>To branch</Label>
+              <Select onValueChange={() => {}}>
+                <SelectTrigger><SelectValue placeholder="Destination" /></SelectTrigger>
+                <SelectContent>{["Central", "Riverside", "North Hill", "Eastside Annex"].map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+              </Select>
+              <input type="hidden" {...register("toBranch")} defaultValue="Riverside" />
+            </div>
+          </div>
+          <div>
+            <Label>Reason</Label>
+            <Select onValueChange={() => {}}>
+              <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Hold">Hold fulfillment</SelectItem>
+                <SelectItem value="Transfer">Branch transfer</SelectItem>
+                <SelectItem value="Return">Return to home branch</SelectItem>
+              </SelectContent>
+            </Select>
+            <input type="hidden" {...register("reason")} defaultValue="Transfer" />
+          </div>
+          {reason === "Hold" && (
+            <div>
+              <Label>Patron (hold for)</Label>
+              <Input {...register("holdFor")} placeholder="Patron name" />
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit"><SendHorizonal className="mr-2 h-4 w-4" />Send item</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Main Circulation component ───────────────────────────────────────────────
 function Circulation() {
   const [checkouts, setCheckouts] = useState(initialCheckouts);
@@ -275,6 +393,10 @@ function Circulation() {
   const [selectedPatronId, setSelectedPatronId] = useState<string | null>(null);
   const [holdTrap, setHoldTrap] = useState<{ open: boolean; holdFor: string; checkoutId: string }>({ open: false, holdFor: "", checkoutId: "" });
   const [payFine, setPayFine] = useState<Fine | null>(null);
+  const [transitItems, setTransitItems] = useState<TransitItem[]>(initialTransit);
+  const [showSendItem, setShowSendItem] = useState(false);
+  const [transitFilter, setTransitFilter] = useState<"All" | "In transit" | "Received">("All");
+  const [transitPage, setTransitPage] = useState({ page: 1, pageSize: 10 });
 
   // Pagination states
   const [checkoutPage, setCheckoutPage] = useState({ page: 1, pageSize: 10 });
@@ -291,6 +413,9 @@ function Circulation() {
   );
   const { paged: pagedHolds, ...holdsPag } = usePagination(holds, holdsPage);
   const { paged: pagedFines, ...finesPag } = usePagination(fines, finesPage);
+  const filteredTransit = transitItems.filter((t) => transitFilter === "All" || t.status === transitFilter);
+  const { paged: pagedTransit, ...transitPag } = usePagination(filteredTransit, transitPage);
+  const inTransitCount = transitItems.filter((t) => t.status === "In transit").length;
 
   const onCheckout = () => {
     if (!cardNumber || !barcode) return toast.error("Enter patron card and item barcode");
@@ -374,6 +499,10 @@ function Circulation() {
             <TabsTrigger value="return"><RotateCcw className="mr-1.5 h-4 w-4" />Return / Renew</TabsTrigger>
             <TabsTrigger value="holds"><Bookmark className="mr-1.5 h-4 w-4" />Holds</TabsTrigger>
             <TabsTrigger value="fines"><DollarSign className="mr-1.5 h-4 w-4" />Fines</TabsTrigger>
+            <TabsTrigger value="transit">
+              <ArrowRightLeft className="mr-1.5 h-4 w-4" />Transit
+              {inTransitCount > 0 && <span className="ml-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1.5">{inTransitCount}</span>}
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Check out ── */}
@@ -562,10 +691,87 @@ function Circulation() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ── Transit ── */}
+          <TabsContent value="transit" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="font-serif">Inter-branch transit</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    {(["All", "In transit", "Received"] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => { setTransitFilter(f); setTransitPage({ page: 1, pageSize: 10 }); }}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${transitFilter === f ? "bg-accent text-accent-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                      >{f}</button>
+                    ))}
+                  </div>
+                  <Button size="sm" onClick={() => setShowSendItem(true)}>
+                    <SendHorizonal className="mr-1.5 h-4 w-4" /> Send item
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="mono">Barcode</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>From</TableHead>
+                      <TableHead>To</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Hold for</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pagedTransit.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="mono text-xs">{t.barcode}</TableCell>
+                        <TableCell className="font-medium text-sm">{t.title}</TableCell>
+                        <TableCell className="text-sm">{t.fromBranch}</TableCell>
+                        <TableCell className="text-sm">{t.toBranch}</TableCell>
+                        <TableCell className="mono text-xs">{t.sentDate}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{t.reason}</Badge></TableCell>
+                        <TableCell className="text-sm">{t.holdFor ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                        <TableCell>
+                          <Badge variant={t.status === "In transit" ? "secondary" : "default"}>
+                            {t.status === "Received" && <CheckCircle2 className="mr-1 h-3 w-3" />}{t.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {t.status === "In transit" && (
+                            <Button size="sm" variant="outline" onClick={() => {
+                              setTransitItems((prev) => prev.map((i) => i.id === t.id ? { ...i, status: "Received" as const } : i));
+                              toast.success(`Item received at ${t.toBranch}`);
+                            }}>
+                              Receive
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {pagedTransit.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-10 text-muted-foreground text-sm">
+                          No transit items match the current filter.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                <DataPagination {...transitPag} page={transitPage.page} pageSize={transitPage.pageSize} onChange={setTransitPage} />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
       {/* ── Dialogs ── */}
+      <SendItemDialog open={showSendItem} onClose={() => setShowSendItem(false)} onSend={(item) => setTransitItems((prev) => [item, ...prev])} />
       <PatronLookupDialog open={showPatronLookup} onClose={() => setShowPatronLookup(false)} onSelect={(card) => setCardNumber(card)} />
       <PlaceHoldDialog open={showPlaceHold} onClose={() => setShowPlaceHold(false)} onPlace={(h) => setHolds((prev) => [h, ...prev])} />
       <PatronPanel patronId={selectedPatronId} open={showPatronPanel} onClose={() => setShowPatronPanel(false)} checkouts={checkouts} fines={fines} />

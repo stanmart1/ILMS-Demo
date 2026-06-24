@@ -58,12 +58,212 @@ import {
 } from "@/lib/mock-data";
 import type { Subscription, SerialIssue, RoutingSlip } from "@/lib/mock-data";
 import { toast } from "sonner";
-import { FileText, Plus, RefreshCw, Send, Share2 } from "lucide-react";
+import { FileText, Plus, RefreshCw, Send, Share2, CalendarDays, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/serials")({
   head: () => ({ meta: [{ title: "Serials — Athenaeum" }] }),
   component: Serials,
 });
+
+// ─── Prediction Patterns ──────────────────────────────────────────────────────
+type FreqConfig = {
+  interval: number;        // days between issues
+  publishDay: string;      // "Monday" | "1" | "15" etc.
+  graceDays: number;
+};
+
+const FREQ_DEFAULTS: Record<Subscription["frequency"], FreqConfig> = {
+  Weekly:    { interval: 7,   publishDay: "Monday",  graceDays: 3 },
+  Monthly:   { interval: 30,  publishDay: "1",       graceDays: 7 },
+  Quarterly: { interval: 91,  publishDay: "1",       graceDays: 14 },
+  Annual:    { interval: 365, publishDay: "January", graceDays: 30 },
+};
+
+function generateExpected(start: string, freq: FreqConfig, count: number): string[] {
+  const dates: string[] = [];
+  const d = new Date(start);
+  for (let i = 0; i < count; i++) {
+    d.setDate(d.getDate() + freq.interval);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+const patternSchema = z.object({
+  interval: z.coerce.number().min(1, "Must be ≥ 1").max(400),
+  publishDay: z.string().min(1, "Required"),
+  graceDays: z.coerce.number().min(0).max(90),
+});
+type PatternForm = z.infer<typeof patternSchema>;
+
+function PredictionPatternsTab({ subscriptions }: { subscriptions: Subscription[] }) {
+  const [selected, setSelected] = useState<Subscription | null>(null);
+  const [configs, setConfigs] = useState<Record<string, FreqConfig>>(() =>
+    Object.fromEntries(subscriptions.map((s) => [s.id, { ...FREQ_DEFAULTS[s.frequency] }]))
+  );
+  const [editOpen, setEditOpen] = useState(false);
+  const [previewCount, setPreviewCount] = useState(6);
+
+  const form = useForm<PatternForm>({
+    resolver: zodResolver(patternSchema),
+    defaultValues: { interval: 30, publishDay: "1", graceDays: 7 },
+  });
+
+  const openEdit = (sub: Subscription) => {
+    setSelected(sub);
+    const cfg = configs[sub.id] ?? FREQ_DEFAULTS[sub.frequency];
+    form.reset(cfg);
+    setEditOpen(true);
+  };
+
+  const onSave = (data: PatternForm) => {
+    if (!selected) return;
+    setConfigs((prev) => ({ ...prev, [selected.id]: data }));
+    toast.success(`Prediction pattern saved for "${selected.title}"`);
+    setEditOpen(false);
+  };
+
+  const preview = selected ? generateExpected(selected.nextIssue, configs[selected.id] ?? FREQ_DEFAULTS[selected.frequency], previewCount) : [];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-serif">Subscription prediction patterns</CardTitle>
+          <p className="text-sm text-muted-foreground">Configure the expected issue schedule for each subscription. Click a row to preview upcoming issues.</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Frequency</TableHead>
+                <TableHead>Interval (days)</TableHead>
+                <TableHead>Publish day</TableHead>
+                <TableHead>Grace days</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subscriptions.map((sub) => {
+                const cfg = configs[sub.id] ?? FREQ_DEFAULTS[sub.frequency];
+                return (
+                  <TableRow
+                    key={sub.id}
+                    className={`cursor-pointer ${selected?.id === sub.id ? "bg-muted/50" : ""}`}
+                    onClick={() => setSelected(sub)}
+                  >
+                    <TableCell className="font-medium">{sub.title}</TableCell>
+                    <TableCell><Badge variant="outline">{sub.frequency}</Badge></TableCell>
+                    <TableCell className="mono">{cfg.interval}</TableCell>
+                    <TableCell>{cfg.publishDay}</TableCell>
+                    <TableCell>{cfg.graceDays} days</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(sub); }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {selected && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-serif text-base">
+              <CalendarDays className="mr-2 inline-block h-4 w-4 text-muted-foreground" />
+              Next {previewCount} expected issues — {selected.title}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Show</span>
+              {[4, 6, 12].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setPreviewCount(n)}
+                  className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${previewCount === n ? "bg-accent text-accent-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                >{n}</button>
+              ))}
+              <Button size="sm" variant="outline" onClick={() => openEdit(selected)}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit pattern
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {preview.map((date, i) => (
+                <div key={date} className="rounded-md border border-border bg-card p-3 text-center">
+                  <div className="text-xs font-medium text-muted-foreground mb-1">Issue {i + 1}</div>
+                  <div className="font-mono text-sm font-semibold">{date}</div>
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    {new Date(date) < new Date() ? (
+                      <span className="text-destructive">Past due</span>
+                    ) : (
+                      <>in {Math.ceil((new Date(date).getTime() - Date.now()) / 86400000)} days</>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Edit prediction pattern</DialogTitle>
+            {selected && <p className="text-sm text-muted-foreground">{selected.title} · {selected.frequency}</p>}
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="interval"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Interval (days between issues)</FormLabel>
+                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="publishDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Publish day / month</FormLabel>
+                    <FormControl><Input placeholder="e.g. Monday, 1, 15, January" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="graceDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Grace days before marking late</FormLabel>
+                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+                <Button type="submit">Save pattern</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -316,6 +516,7 @@ function Serials() {
             <TabsTrigger value="issues">Issue check-in</TabsTrigger>
             <TabsTrigger value="claims">Claims</TabsTrigger>
             <TabsTrigger value="routing">Routing</TabsTrigger>
+            <TabsTrigger value="patterns"><CalendarDays className="mr-1.5 h-4 w-4" />Prediction patterns</TabsTrigger>
           </TabsList>
 
           {/* ════ Subscriptions tab ════ */}
@@ -573,6 +774,11 @@ function Serials() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ════ Prediction patterns tab ════ */}
+          <TabsContent value="patterns" className="mt-4">
+            <PredictionPatternsTab subscriptions={subs} />
           </TabsContent>
         </Tabs>
       </div>

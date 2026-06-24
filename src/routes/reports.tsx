@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Download, BarChart2, PieChart as PieIcon, TrendingUp,
   TableIcon, Search, Play, Plus, Trash2, Pencil, SlidersHorizontal,
-  BookOpen, ShoppingCart, Newspaper, LibraryBig, Users,
+  BookOpen, ShoppingCart, Newspaper, LibraryBig, Users, Clock, Pause, CirclePlay,
 } from "lucide-react";
 import {
   REPORT_LIBRARY, toCSV, getCirculationByMonth, getTopTitles, getFinesByType,
@@ -995,6 +995,241 @@ function AnalyticsDashboard() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Scheduled Reports tab
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type ScheduleFrequency = "Daily" | "Weekly" | "Monthly";
+type ScheduledReport = {
+  id: string;
+  name: string;
+  reportId: string;
+  frequency: ScheduleFrequency;
+  hour: string;
+  recipients: string;
+  lastRun: string | null;
+  nextRun: string;
+  active: boolean;
+};
+
+const scheduleSchema = z.object({
+  name: z.string().min(1, "Name required"),
+  reportId: z.string().min(1, "Select a report"),
+  frequency: z.enum(["Daily", "Weekly", "Monthly"]),
+  hour: z.string().min(1, "Select a time"),
+  recipients: z.string().email("Enter a valid email").or(z.string().includes(",")).min(1, "At least one recipient"),
+});
+type ScheduleForm = z.infer<typeof scheduleSchema>;
+
+function nextRunDate(freq: ScheduleFrequency, hour: string): string {
+  const d = new Date();
+  d.setHours(parseInt(hour.split(":")[0] ?? "8", 10), 0, 0, 0);
+  if (freq === "Daily") d.setDate(d.getDate() + 1);
+  else if (freq === "Weekly") d.setDate(d.getDate() + 7);
+  else d.setMonth(d.getMonth() + 1);
+  return d.toISOString().slice(0, 16).replace("T", " ");
+}
+
+const initialSchedules: ScheduledReport[] = [
+  { id: "sc1", name: "Daily circulation summary", reportId: "r01", frequency: "Daily", hour: "07:00", recipients: "director@library.org", lastRun: "2026-07-23 07:00", nextRun: nextRunDate("Daily", "07:00"), active: true },
+  { id: "sc2", name: "Weekly overdue report", reportId: "r02", frequency: "Weekly", hour: "08:00", recipients: "circulation@library.org, director@library.org", lastRun: "2026-07-21 08:00", nextRun: nextRunDate("Weekly", "08:00"), active: true },
+  { id: "sc3", name: "Monthly acquisitions spend", reportId: "r08", frequency: "Monthly", hour: "09:00", recipients: "acquisitions@library.org", lastRun: "2026-07-01 09:00", nextRun: nextRunDate("Monthly", "09:00"), active: false },
+];
+
+function ScheduledReportsTab() {
+  const [schedules, setSchedules] = useState<ScheduledReport[]>(initialSchedules);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ScheduledReport | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScheduledReport | null>(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ScheduleForm>({
+    resolver: zodResolver(scheduleSchema),
+    defaultValues: { frequency: "Weekly", hour: "08:00" },
+  });
+
+  const openNew = () => { setEditTarget(null); reset({ frequency: "Weekly", hour: "08:00" }); setDialogOpen(true); };
+  const openEdit = (s: ScheduledReport) => {
+    setEditTarget(s);
+    reset({ name: s.name, reportId: s.reportId, frequency: s.frequency, hour: s.hour, recipients: s.recipients });
+    setDialogOpen(true);
+  };
+
+  const onSave = (data: ScheduleForm) => {
+    const next = nextRunDate(data.frequency, data.hour);
+    if (editTarget) {
+      setSchedules((prev) => prev.map((s) => s.id === editTarget.id ? { ...s, ...data, nextRun: next } : s));
+      toast.success("Schedule updated");
+    } else {
+      setSchedules((prev) => [{
+        id: `sc${Date.now()}`, ...data, lastRun: null, nextRun: next, active: true,
+      }, ...prev]);
+      toast.success("Schedule created");
+    }
+    setDialogOpen(false);
+  };
+
+  const toggleActive = (id: string) => {
+    setSchedules((prev) => prev.map((s) => s.id === id ? { ...s, active: !s.active } : s));
+  };
+
+  const runNow = (s: ScheduledReport) => {
+    const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+    setSchedules((prev) => prev.map((r) => r.id === s.id ? { ...r, lastRun: now } : r));
+    toast.success(`"${s.name}" queued — recipients will receive the report shortly`);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-serif text-lg font-semibold">Scheduled reports</h3>
+          <p className="text-sm text-muted-foreground">Automatically run reports on a schedule and email results to recipients.</p>
+        </div>
+        <Button size="sm" onClick={openNew}><Plus className="mr-1.5 h-4 w-4" /> New schedule</Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Report</TableHead>
+                <TableHead>Frequency</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead>Last run</TableHead>
+                <TableHead>Next run</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {schedules.map((s) => {
+                const def = REPORT_LIBRARY.find((r) => r.id === s.reportId);
+                return (
+                  <TableRow key={s.id} className={!s.active ? "opacity-60" : ""}>
+                    <TableCell className="font-medium">{s.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{def?.name ?? s.reportId}</TableCell>
+                    <TableCell><Badge variant="outline">{s.frequency}</Badge></TableCell>
+                    <TableCell className="mono text-xs">{s.hour}</TableCell>
+                    <TableCell className="max-w-[180px] truncate text-xs text-muted-foreground">{s.recipients}</TableCell>
+                    <TableCell className="mono text-xs">{s.lastRun ?? <span className="text-muted-foreground">Never</span>}</TableCell>
+                    <TableCell className="mono text-xs">{s.active ? s.nextRun : <span className="text-muted-foreground">Paused</span>}</TableCell>
+                    <TableCell>
+                      <Badge variant={s.active ? "default" : "secondary"}>{s.active ? "Active" : "Paused"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" title="Run now" onClick={() => runNow(s)}>
+                          <CirclePlay className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" title={s.active ? "Pause" : "Resume"} onClick={() => toggleActive(s.id)}>
+                          {s.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                        <Button size="icon" variant="ghost" title="Edit" onClick={() => openEdit(s)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" title="Delete" onClick={() => setDeleteTarget(s)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {schedules.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                    <Clock className="mx-auto mb-2 h-8 w-8 opacity-30" />
+                    No scheduled reports yet. Click "+ New schedule" to create one.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit dialog */}
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif">{editTarget ? "Edit schedule" : "New schedule"}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <form id="schedule-form" onSubmit={handleSubmit(onSave)} className="space-y-4">
+            <div>
+              <Label>Schedule name</Label>
+              <Input {...register("name")} placeholder="e.g. Weekly overdue report" />
+              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
+            </div>
+            <div>
+              <Label>Report</Label>
+              <Select defaultValue={editTarget?.reportId ?? ""}>
+                <SelectTrigger><SelectValue placeholder="Select a report" /></SelectTrigger>
+                <SelectContent>
+                  {REPORT_LIBRARY.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <input type="hidden" {...register("reportId")} defaultValue={editTarget?.reportId ?? REPORT_LIBRARY[0]?.id} />
+              {errors.reportId && <p className="text-xs text-destructive mt-1">{errors.reportId.message}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Frequency</Label>
+                <Select defaultValue={editTarget?.frequency ?? "Weekly"}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(["Daily", "Weekly", "Monthly"] as const).map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" {...register("frequency")} defaultValue={editTarget?.frequency ?? "Weekly"} />
+              </div>
+              <div>
+                <Label>Time</Label>
+                <Select defaultValue={editTarget?.hour ?? "08:00"}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["06:00","07:00","08:00","09:00","12:00","17:00","20:00","23:00"].map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" {...register("hour")} defaultValue={editTarget?.hour ?? "08:00"} />
+              </div>
+            </div>
+            <div>
+              <Label>Email recipients (comma-separated)</Label>
+              <Input {...register("recipients")} placeholder="person@library.org, another@library.org" />
+              {errors.recipients && <p className="text-xs text-destructive mt-1">{errors.recipients.message}</p>}
+            </div>
+          </form>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction type="submit" form="schedule-form">Save schedule</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete confirm */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete schedule?</AlertDialogTitle>
+            <AlertDialogDescription>"{deleteTarget?.name}" will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+              setSchedules((prev) => prev.filter((s) => s.id !== deleteTarget?.id));
+              toast.success("Schedule deleted");
+              setDeleteTarget(null);
+            }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Root component
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1009,6 +1244,7 @@ function Reports() {
           <TabsTrigger value="library"><LibraryBig className="mr-1.5 h-4 w-4" />Report library</TabsTrigger>
           <TabsTrigger value="builder"><SlidersHorizontal className="mr-1.5 h-4 w-4" />Builder</TabsTrigger>
           <TabsTrigger value="analytics"><TrendingUp className="mr-1.5 h-4 w-4" />Analytics</TabsTrigger>
+          <TabsTrigger value="scheduled"><Clock className="mr-1.5 h-4 w-4" />Scheduled</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="mt-5">
@@ -1021,6 +1257,10 @@ function Reports() {
 
         <TabsContent value="analytics" className="mt-5">
           <AnalyticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="scheduled" className="mt-5">
+          <ScheduledReportsTab />
         </TabsContent>
       </Tabs>
     </PageShell>
