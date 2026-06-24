@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageShell } from "@/components/page-shell";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -183,6 +184,9 @@ function PatronLoginDialog({
 
 // ── Main OPAC component ────────────────────────────────────────────────────
 function OPAC() {
+  // Staff viewing the OPAC as a preview don't need a patron sign-in button.
+  const { user: staffUser } = useAuth();
+
   // ── Main search ────────────────────────────────────────────────────────
   const [q, setQ] = useState("");
   const [field, setField] = useState("any");
@@ -351,19 +355,23 @@ function OPAC() {
               Glossary
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (opacPatron) {
-                setAccountOpen(true);
-              } else {
-                setLoginOpen(true);
-              }
-            }}
-          >
-            <User className="mr-1.5 h-4 w-4" />
-            {opacPatron ? `My Account (${opacPatron.name})` : "Sign in"}
-          </Button>
+          {/* Only show patron Sign In when not viewed by a logged-in staff member.
+              On a public terminal the staffUser will be null, so the button appears. */}
+          {!staffUser && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (opacPatron) {
+                  setAccountOpen(true);
+                } else {
+                  setLoginOpen(true);
+                }
+              }}
+            >
+              <User className="mr-1.5 h-4 w-4" />
+              {opacPatron ? `My Account (${opacPatron.name})` : "Sign in"}
+            </Button>
+          )}
         </>
       }
     >
