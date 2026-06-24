@@ -27,6 +27,9 @@ RUN bun install --production --frozen-lockfile
 # Copy the built output from the builder stage
 COPY --from=builder /app/dist ./dist
 
+# Entry point: serves dist/client/ as static files and falls back to SSR
+COPY serve.js ./
+
 EXPOSE 3000
 
-CMD ["bun", "dist/server/server.js"]
+CMD ["bun", "serve.js"]
