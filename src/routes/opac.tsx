@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/opac")({
   head: () => ({ meta: [{ title: "OPAC — Athenaeum Public Catalog" }] }),
-  component: OPAC;
+  component: OPAC,
 });
 
 function OPAC() {

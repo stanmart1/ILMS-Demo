@@ -10,7 +10,7 @@ import { purchaseOrders, vendors, budgets } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/acquisitions")({
   head: () => ({ meta: [{ title: "Acquisitions — Athenaeum" }] }),
-  component: Acquisitions;
+  component: Acquisitions,
 });
 
 const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });

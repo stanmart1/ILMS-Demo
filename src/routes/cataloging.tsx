@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/cataloging")({
   head: () => ({ meta: [{ title: "Cataloging — Athenaeum" }] }),
-  component: Cataloging;
+  component: Cataloging,
 });
 
 const z3950Targets = [

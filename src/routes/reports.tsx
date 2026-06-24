@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/reports")({
   head: () => ({ meta: [{ title: "Reports — Athenaeum" }] }),
-  component: Reports;
+  component: Reports,
 });
 
 const savedReports = [
