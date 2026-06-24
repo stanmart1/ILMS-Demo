@@ -58,7 +58,7 @@ import {
 } from "@/lib/mock-data";
 import type { Subscription, SerialIssue, RoutingSlip } from "@/lib/mock-data";
 import { toast } from "sonner";
-import { FileText, Plus, RefreshCw, Send, Share2, CalendarDays, Pencil } from "lucide-react";
+import { FileText, Plus, RefreshCw, Send, Share2, CalendarDays, Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/serials")({
   head: () => ({ meta: [{ title: "Serials — Athenaeum" }] }),
@@ -318,6 +318,16 @@ const newSubSchema = z.object({
 });
 type NewSubValues = z.infer<typeof newSubSchema>;
 
+const editSubSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  issn: z
+    .string()
+    .regex(/^\d{4}-\d{3}[\dX]$/i, "Format must be XXXX-XXXX"),
+  vendor: z.string().min(1, "Vendor is required"),
+  frequency: z.enum(["Weekly", "Monthly", "Quarterly", "Annual"]),
+});
+type EditSubValues = z.infer<typeof editSubSchema>;
+
 const newRoutingSchema = z.object({
   subscriptionId: z.string().min(1, "Subscription is required"),
   recipients: z.string().min(1, "Enter at least one recipient"),
@@ -335,6 +345,8 @@ function Serials() {
 
   // ── Dialog visibility ──
   const [newSubOpen, setNewSubOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Subscription | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Subscription | null>(null);
   const [renewTarget, setRenewTarget] = useState<Subscription | null>(null);
   const [claimTarget, setClaimTarget] = useState<SerialIssue | null>(null);
   const [claimLetter, setClaimLetter] = useState("");
@@ -364,6 +376,11 @@ function Serials() {
     defaultValues: { subscriptionId: "", recipients: "", returnBy: "" },
   });
 
+  const editSubForm = useForm<EditSubValues>({
+    resolver: zodResolver(editSubSchema),
+    defaultValues: { title: "", issn: "", vendor: "", frequency: "Monthly" },
+  });
+
   // ─── New subscription ────────────────────────────────────────────────────
 
   function handleNewSub(values: NewSubValues) {
@@ -384,18 +401,54 @@ function Serials() {
     newSubForm.reset();
   }
 
+  // ─── Edit subscription ────────────────────────────────────────────────────
+
+  function openEditSub(sub: Subscription) {
+    setEditTarget(sub);
+    editSubForm.reset({
+      title: sub.title,
+      issn: sub.issn,
+      vendor: sub.vendor,
+      frequency: sub.frequency,
+    });
+  }
+
+  function handleEditSub(values: EditSubValues) {
+    if (!editTarget) return;
+    setSubs((prev) =>
+      prev.map((s) =>
+        s.id === editTarget.id ? { ...s, ...values } : s,
+      ),
+    );
+    toast.success(`"${values.title}" updated`);
+    setEditTarget(null);
+  }
+
+  // ─── Delete subscription ──────────────────────────────────────────────────
+
+  function handleDeleteSub() {
+    if (!deleteTarget) return;
+    setSubs((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+    setIssues((prev) => prev.filter((i) => i.title !== deleteTarget.title));
+    setSlips((prev) => prev.filter((sl) => sl.subscriptionId !== deleteTarget.id));
+    toast.success(`"${deleteTarget.title}" removed`);
+    setDeleteTarget(null);
+  }
+
   // ─── Renewal ─────────────────────────────────────────────────────────────
 
   function handleRenew(sub: Subscription) {
+    // Subscriptions are always renewed for 12 months regardless of issue frequency.
+    // Keep the existing nextIssue schedule but set status back to Active and
+    // advance nextIssue by one period from today so the delivery resumes promptly.
     const today = new Date().toISOString().slice(0, 10);
+    const nextIssue = addPeriod(today, sub.frequency);
     setSubs((prev) =>
       prev.map((s) =>
-        s.id === sub.id
-          ? { ...s, status: "Active", nextIssue: addPeriod(today, s.frequency) }
-          : s,
+        s.id === sub.id ? { ...s, status: "Active", nextIssue } : s,
       ),
     );
-    toast.success(`"${sub.title}" renewed for another year`);
+    toast.success(`"${sub.title}" renewed — next issue expected ${nextIssue}`);
     setRenewTarget(null);
   }
 
@@ -571,17 +624,36 @@ function Serials() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          {(s.status === "Lapsed" ||
-                            s.status === "Renewing") && (
+                          <div className="flex items-center justify-end gap-1">
+                            {(s.status === "Lapsed" || s.status === "Renewing") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setRenewTarget(s)}
+                              >
+                                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                Renew
+                              </Button>
+                            )}
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setRenewTarget(s)}
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              title="Edit subscription"
+                              onClick={() => openEditSub(s)}
                             >
-                              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                              Renew
+                              <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                          )}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              title="Delete subscription"
+                              onClick={() => setDeleteTarget(s)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -975,6 +1047,127 @@ function Serials() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ════ Edit Subscription Dialog ════ */}
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open) => {
+          if (!open) setEditTarget(null);
+        }}
+      >
+        <DialogContent className="w-full max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit subscription</DialogTitle>
+          </DialogHeader>
+          <Form {...editSubForm}>
+            <form
+              onSubmit={editSubForm.handleSubmit(handleEditSub)}
+              className="space-y-4"
+            >
+              <FormField
+                control={editSubForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={editSubForm.control}
+                  name="issn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ISSN</FormLabel>
+                      <FormControl>
+                        <Input placeholder="XXXX-XXXX" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editSubForm.control}
+                  name="vendor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vendor</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={editSubForm.control}
+                name="frequency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Weekly">Weekly</SelectItem>
+                        <SelectItem value="Monthly">Monthly</SelectItem>
+                        <SelectItem value="Quarterly">Quarterly</SelectItem>
+                        <SelectItem value="Annual">Annual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditTarget(null)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save changes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ════ Delete Subscription AlertDialog ════ */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this subscription?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{deleteTarget?.title}</strong> and all its associated
+              issues and routing slips will be permanently removed. This cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteSub}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ════ New Routing Slip Dialog ════ */}
       <Dialog
