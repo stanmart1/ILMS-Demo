@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SerialsRouteImport } from './routes/serials'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as OpacRouteImport } from './routes/opac'
+import { Route as CirculationRouteImport } from './routes/circulation'
+import { Route as CatalogingRouteImport } from './routes/cataloging'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AcquisitionsRouteImport } from './routes/acquisitions'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SerialsRoute = SerialsRouteImport.update({
+  id: '/serials',
+  path: '/serials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpacRoute = OpacRouteImport.update({
+  id: '/opac',
+  path: '/opac',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CirculationRoute = CirculationRouteImport.update({
+  id: '/circulation',
+  path: '/circulation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogingRoute = CatalogingRouteImport.update({
+  id: '/cataloging',
+  path: '/cataloging',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcquisitionsRoute = AcquisitionsRouteImport.update({
+  id: '/acquisitions',
+  path: '/acquisitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acquisitions': typeof AcquisitionsRoute
+  '/admin': typeof AdminRoute
+  '/cataloging': typeof CatalogingRoute
+  '/circulation': typeof CirculationRoute
+  '/opac': typeof OpacRoute
+  '/reports': typeof ReportsRoute
+  '/serials': typeof SerialsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acquisitions': typeof AcquisitionsRoute
+  '/admin': typeof AdminRoute
+  '/cataloging': typeof CatalogingRoute
+  '/circulation': typeof CirculationRoute
+  '/opac': typeof OpacRoute
+  '/reports': typeof ReportsRoute
+  '/serials': typeof SerialsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/acquisitions': typeof AcquisitionsRoute
+  '/admin': typeof AdminRoute
+  '/cataloging': typeof CatalogingRoute
+  '/circulation': typeof CirculationRoute
+  '/opac': typeof OpacRoute
+  '/reports': typeof ReportsRoute
+  '/serials': typeof SerialsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/acquisitions'
+    | '/admin'
+    | '/cataloging'
+    | '/circulation'
+    | '/opac'
+    | '/reports'
+    | '/serials'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/acquisitions'
+    | '/admin'
+    | '/cataloging'
+    | '/circulation'
+    | '/opac'
+    | '/reports'
+    | '/serials'
+  id:
+    | '__root__'
+    | '/'
+    | '/acquisitions'
+    | '/admin'
+    | '/cataloging'
+    | '/circulation'
+    | '/opac'
+    | '/reports'
+    | '/serials'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcquisitionsRoute: typeof AcquisitionsRoute
+  AdminRoute: typeof AdminRoute
+  CatalogingRoute: typeof CatalogingRoute
+  CirculationRoute: typeof CirculationRoute
+  OpacRoute: typeof OpacRoute
+  ReportsRoute: typeof ReportsRoute
+  SerialsRoute: typeof SerialsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/serials': {
+      id: '/serials'
+      path: '/serials'
+      fullPath: '/serials'
+      preLoaderRoute: typeof SerialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opac': {
+      id: '/opac'
+      path: '/opac'
+      fullPath: '/opac'
+      preLoaderRoute: typeof OpacRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/circulation': {
+      id: '/circulation'
+      path: '/circulation'
+      fullPath: '/circulation'
+      preLoaderRoute: typeof CirculationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cataloging': {
+      id: '/cataloging'
+      path: '/cataloging'
+      fullPath: '/cataloging'
+      preLoaderRoute: typeof CatalogingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acquisitions': {
+      id: '/acquisitions'
+      path: '/acquisitions'
+      fullPath: '/acquisitions'
+      preLoaderRoute: typeof AcquisitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +197,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcquisitionsRoute: AcquisitionsRoute,
+  AdminRoute: AdminRoute,
+  CatalogingRoute: CatalogingRoute,
+  CirculationRoute: CirculationRoute,
+  OpacRoute: OpacRoute,
+  ReportsRoute: ReportsRoute,
+  SerialsRoute: SerialsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
