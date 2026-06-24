@@ -1016,7 +1016,7 @@ const scheduleSchema = z.object({
   reportId: z.string().min(1, "Select a report"),
   frequency: z.enum(["Daily", "Weekly", "Monthly"]),
   hour: z.string().min(1, "Select a time"),
-  recipients: z.string().email("Enter a valid email").or(z.string().includes(",")).min(1, "At least one recipient"),
+  recipients: z.string().min(1, "At least one recipient email required"),
 });
 type ScheduleForm = z.infer<typeof scheduleSchema>;
 

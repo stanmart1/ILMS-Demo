@@ -15,6 +15,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<StaffUser | null>(() => {
+    if (typeof window === "undefined") return null;
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? (staffUsers.find((u) => u.id === stored) ?? null) : null;
   });
