@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SerialsRouteImport } from './routes/serials'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OpacRouteImport } from './routes/opac'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as CirculationRouteImport } from './routes/circulation'
 import { Route as CatalogingRouteImport } from './routes/cataloging'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcquisitionsRouteImport } from './routes/acquisitions'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OpacIdRouteImport } from './routes/opac.$id'
 
 const SerialsRoute = SerialsRouteImport.update({
   id: '/serials',
@@ -31,6 +33,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const OpacRoute = OpacRouteImport.update({
   id: '/opac',
   path: '/opac',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CirculationRoute = CirculationRouteImport.update({
@@ -58,6 +65,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OpacIdRoute = OpacIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OpacRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,9 +77,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRoute
   '/circulation': typeof CirculationRoute
-  '/opac': typeof OpacRoute
+  '/login': typeof LoginRoute
+  '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/opac/$id': typeof OpacIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,9 +89,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRoute
   '/circulation': typeof CirculationRoute
-  '/opac': typeof OpacRoute
+  '/login': typeof LoginRoute
+  '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/opac/$id': typeof OpacIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,9 +102,11 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRoute
   '/circulation': typeof CirculationRoute
-  '/opac': typeof OpacRoute
+  '/login': typeof LoginRoute
+  '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
   '/serials': typeof SerialsRoute
+  '/opac/$id': typeof OpacIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,9 +116,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/login'
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/opac/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,9 +128,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/login'
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/opac/$id'
   id:
     | '__root__'
     | '/'
@@ -118,9 +140,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/login'
     | '/opac'
     | '/reports'
     | '/serials'
+    | '/opac/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -129,7 +153,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogingRoute: typeof CatalogingRoute
   CirculationRoute: typeof CirculationRoute
-  OpacRoute: typeof OpacRoute
+  LoginRoute: typeof LoginRoute
+  OpacRoute: typeof OpacRouteWithChildren
   ReportsRoute: typeof ReportsRoute
   SerialsRoute: typeof SerialsRoute
 }
@@ -155,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/opac'
       fullPath: '/opac'
       preLoaderRoute: typeof OpacRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/circulation': {
@@ -192,8 +224,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/opac/$id': {
+      id: '/opac/$id'
+      path: '/$id'
+      fullPath: '/opac/$id'
+      preLoaderRoute: typeof OpacIdRouteImport
+      parentRoute: typeof OpacRoute
+    }
   }
 }
+
+interface OpacRouteChildren {
+  OpacIdRoute: typeof OpacIdRoute
+}
+
+const OpacRouteChildren: OpacRouteChildren = {
+  OpacIdRoute: OpacIdRoute,
+}
+
+const OpacRouteWithChildren = OpacRoute._addFileChildren(OpacRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -201,10 +250,21 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogingRoute: CatalogingRoute,
   CirculationRoute: CirculationRoute,
-  OpacRoute: OpacRoute,
+  LoginRoute: LoginRoute,
+  OpacRoute: OpacRouteWithChildren,
   ReportsRoute: ReportsRoute,
   SerialsRoute: SerialsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

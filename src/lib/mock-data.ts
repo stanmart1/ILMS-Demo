@@ -191,6 +191,180 @@ export const staffUsers: StaffUser[] = [
   { id: "u5", name: "Aaliyah Brooks", email: "a.brooks@library.org", role: "Librarian", branch: "North Hill", lastLogin: "2026-06-22 14:30" },
 ];
 
+// ─── Extended data types ───────────────────────────────────────────────────
+
+export type Fine = {
+  id: string;
+  patronId: string;
+  patronName: string;
+  cardNumber: string;
+  itemTitle: string;
+  barcode: string;
+  type: "Overdue" | "Lost item" | "Damaged" | "Processing fee";
+  amount: number;
+  paid: boolean;
+  date: string;
+};
+
+export type Branch = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  manager: string;
+  active: boolean;
+};
+
+export type PatronCategory = {
+  id: string;
+  name: string;
+  loanPeriod: number;
+  maxCheckouts: number;
+  maxRenewals: number;
+  finePerDay: number;
+  registrationFee: number;
+  description: string;
+};
+
+export type ItemType = {
+  id: string;
+  code: string;
+  description: string;
+  loanPeriod: number;
+  renewals: number;
+  finePerDay: number;
+  notForLoan: boolean;
+};
+
+export type Invoice = {
+  id: string;
+  poId: string;
+  vendor: string;
+  amount: number;
+  invoiceDate: string;
+  receivedDate: string;
+  status: "Pending" | "Approved" | "Paid" | "Disputed";
+  fund: string;
+};
+
+export type Notification = {
+  id: string;
+  type: "overdue" | "hold_ready" | "renewal" | "system" | "acquisition";
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+};
+
+export type RoutingSlip = {
+  id: string;
+  subscriptionId: string;
+  title: string;
+  recipients: string[];
+  currentHolder: string;
+  returnBy: string;
+  status: "Active" | "Complete";
+};
+
+export type CirculationRule = {
+  id: string;
+  patronCategory: string;
+  itemType: string;
+  loanDays: number;
+  renewals: number;
+  finePerDay: number;
+  maxCheckouts: number;
+  holdable: boolean;
+};
+
+export type FineRule = {
+  id: string;
+  patronCategory: string;
+  itemType: string;
+  finePerDay: number;
+  graceDays: number;
+  maxFine: number;
+  lostAfterDays: number;
+  lostFee: number;
+};
+
+// ─── Extended mock data ────────────────────────────────────────────────────
+
+export const fines: Fine[] = [
+  { id: "f1", patronId: "p2", patronName: "Marcus Holloway", cardNumber: "C-100871", itemTitle: "Sapiens", barcode: "31901-00112", type: "Overdue", amount: 4.50, paid: false, date: "2026-06-19" },
+  { id: "f2", patronId: "p4", patronName: "Jonas Eklund", cardNumber: "C-101455", itemTitle: "Educated", barcode: "31901-00321", type: "Overdue", amount: 1.25, paid: false, date: "2026-06-22" },
+  { id: "f3", patronId: "p5", patronName: "Aisha Bello", cardNumber: "C-101602", itemTitle: "The Great Gatsby", barcode: "31901-00098", type: "Lost item", amount: 22.00, paid: false, date: "2026-05-10" },
+  { id: "f4", patronId: "p1", patronName: "Eleanor Voss", cardNumber: "C-100245", itemTitle: "Brief History of Time", barcode: "31901-00077", type: "Overdue", amount: 2.00, paid: true, date: "2026-06-01" },
+  { id: "f5", patronId: "p6", patronName: "Tomás Rivera", cardNumber: "C-101934", itemTitle: "The Midnight Library", barcode: "31901-00510", type: "Overdue", amount: 3.75, paid: false, date: "2026-06-12" },
+  { id: "f6", patronId: "p3", patronName: "Priya Raman", cardNumber: "C-101120", itemTitle: "Dune", barcode: "31901-00142", type: "Damaged", amount: 15.00, paid: true, date: "2026-04-18" },
+];
+
+export const branches: Branch[] = [
+  { id: "br1", name: "Central", address: "100 Main St, Springfield", phone: "555-0100", email: "central@athenaeum.lib", manager: "Margaret Carrington", active: true },
+  { id: "br2", name: "Riverside", address: "45 River Rd, Springfield", phone: "555-0145", email: "riverside@athenaeum.lib", manager: "Sofía Mendez", active: true },
+  { id: "br3", name: "North Hill", address: "220 Hill Ave, Springfield", phone: "555-0220", email: "northhill@athenaeum.lib", manager: "Aaliyah Brooks", active: true },
+  { id: "br4", name: "Eastside Annex", address: "88 East Blvd, Springfield", phone: "555-0088", email: "eastside@athenaeum.lib", manager: "James Okafor", active: false },
+];
+
+export const patronCategories: PatronCategory[] = [
+  { id: "pc1", name: "Adult", loanPeriod: 28, maxCheckouts: 30, maxRenewals: 2, finePerDay: 0.25, registrationFee: 0, description: "Standard adult borrower" },
+  { id: "pc2", name: "Student", loanPeriod: 28, maxCheckouts: 50, maxRenewals: 3, finePerDay: 0.10, registrationFee: 0, description: "Enrolled students" },
+  { id: "pc3", name: "Senior", loanPeriod: 42, maxCheckouts: 30, maxRenewals: 3, finePerDay: 0.10, registrationFee: 0, description: "Patrons age 65+" },
+  { id: "pc4", name: "Juvenile", loanPeriod: 28, maxCheckouts: 20, maxRenewals: 3, finePerDay: 0.00, registrationFee: 0, description: "Under 18 years of age" },
+  { id: "pc5", name: "Staff", loanPeriod: 90, maxCheckouts: 100, maxRenewals: 5, finePerDay: 0.00, registrationFee: 0, description: "Library staff members" },
+];
+
+export const itemTypes: ItemType[] = [
+  { id: "it1", code: "BK", description: "Book", loanPeriod: 28, renewals: 2, finePerDay: 0.25, notForLoan: false },
+  { id: "it2", code: "DVD", description: "DVD / Blu-ray", loanPeriod: 7, renewals: 1, finePerDay: 1.00, notForLoan: false },
+  { id: "it3", code: "REF", description: "Reference", loanPeriod: 0, renewals: 0, finePerDay: 0.00, notForLoan: true },
+  { id: "it4", code: "AUD", description: "Audiobook", loanPeriod: 21, renewals: 2, finePerDay: 0.25, notForLoan: false },
+  { id: "it5", code: "PER", description: "Periodical (in-library)", loanPeriod: 0, renewals: 0, finePerDay: 0.00, notForLoan: true },
+  { id: "it6", code: "MAP", description: "Map", loanPeriod: 14, renewals: 1, finePerDay: 0.50, notForLoan: false },
+];
+
+export const invoices: Invoice[] = [
+  { id: "inv1", poId: "PO-2026-0143", vendor: "Ingram Content Group", amount: 348.90, invoiceDate: "2026-06-10", receivedDate: "2026-06-12", status: "Paid", fund: "Reference" },
+  { id: "inv2", poId: "PO-2026-0142", vendor: "Baker & Taylor", amount: 612.40, invoiceDate: "2026-06-14", receivedDate: "2026-06-16", status: "Approved", fund: "Adult Fiction" },
+  { id: "inv3", poId: "PO-2026-0144", vendor: "EBSCO Information Services", amount: 2840.00, invoiceDate: "2026-06-17", receivedDate: "2026-06-19", status: "Pending", fund: "Periodicals" },
+  { id: "inv4", poId: "PO-2026-0141", vendor: "Baker & Taylor", amount: 425.00, invoiceDate: "2026-05-28", receivedDate: "2026-06-01", status: "Disputed", fund: "Adult Non-Fiction" },
+  { id: "inv5", poId: "PO-2026-0139", vendor: "Midwest Library Service", amount: 315.00, invoiceDate: "2026-05-15", receivedDate: "2026-05-18", status: "Paid", fund: "Children's" },
+];
+
+export const notifications: Notification[] = [
+  { id: "n1", type: "overdue", title: "2 items overdue", message: "Marcus Holloway (C-100871) and Tomás Rivera (C-101934) have overdue items.", date: "2026-06-24 08:00", read: false },
+  { id: "n2", type: "hold_ready", title: "Hold ready for pickup", message: "The Midnight Library is ready for pickup at Central branch for Marcus Holloway.", date: "2026-06-23 15:30", read: false },
+  { id: "n3", type: "acquisition", title: "PO received", message: "PO-2026-0143 from Ingram Content Group (12 items) has been fully received.", date: "2026-06-23 11:10", read: true },
+  { id: "n4", type: "renewal", title: "Subscription renewing", message: "Foreign Affairs (ISSN 0015-7120) subscription is up for renewal — expires 2026-07-15.", date: "2026-06-22 09:00", read: false },
+  { id: "n5", type: "system", title: "System maintenance", message: "Scheduled maintenance window: Sunday 29 Jun 02:00–04:00. System will be read-only.", date: "2026-06-21 10:00", read: true },
+  { id: "n6", type: "overdue", title: "Serial claim required", message: "The Economist issues for Jun 14 and Jun 21 have not been received. Claim letters pending.", date: "2026-06-24 07:45", read: false },
+];
+
+export const routingSlips: RoutingSlip[] = [
+  { id: "rs1", subscriptionId: "s1", title: "Nature", recipients: ["James Okafor", "Sofía Mendez", "Aaliyah Brooks"], currentHolder: "James Okafor", returnBy: "2026-06-30", status: "Active" },
+  { id: "rs2", subscriptionId: "s2", title: "The New Yorker", recipients: ["Margaret Carrington", "Hana Watanabe"], currentHolder: "Margaret Carrington", returnBy: "2026-07-05", status: "Active" },
+  { id: "rs3", subscriptionId: "s3", title: "Scientific American", recipients: ["James Okafor", "Henrik Lindqvist"], currentHolder: "Henrik Lindqvist", returnBy: "2026-07-10", status: "Complete" },
+];
+
+export const circulationRules: CirculationRule[] = [
+  { id: "cr1", patronCategory: "Adult", itemType: "Book", loanDays: 28, renewals: 2, finePerDay: 0.25, maxCheckouts: 30, holdable: true },
+  { id: "cr2", patronCategory: "Adult", itemType: "DVD", loanDays: 7, renewals: 1, finePerDay: 1.00, maxCheckouts: 5, holdable: true },
+  { id: "cr3", patronCategory: "Student", itemType: "Book", loanDays: 28, renewals: 3, finePerDay: 0.10, maxCheckouts: 50, holdable: true },
+  { id: "cr4", patronCategory: "Juvenile", itemType: "Book", loanDays: 28, renewals: 3, finePerDay: 0.00, maxCheckouts: 20, holdable: true },
+  { id: "cr5", patronCategory: "Senior", itemType: "Book", loanDays: 42, renewals: 3, finePerDay: 0.10, maxCheckouts: 30, holdable: true },
+  { id: "cr6", patronCategory: "Staff", itemType: "Any", loanDays: 90, renewals: 5, finePerDay: 0.00, maxCheckouts: 100, holdable: true },
+];
+
+export const fineRules: FineRule[] = [
+  { id: "fr1", patronCategory: "Adult", itemType: "Book", finePerDay: 0.25, graceDays: 1, maxFine: 10.00, lostAfterDays: 90, lostFee: 30.00 },
+  { id: "fr2", patronCategory: "Adult", itemType: "DVD", finePerDay: 1.00, graceDays: 0, maxFine: 20.00, lostAfterDays: 30, lostFee: 25.00 },
+  { id: "fr3", patronCategory: "Student", itemType: "Book", finePerDay: 0.10, graceDays: 2, maxFine: 5.00, lostAfterDays: 90, lostFee: 30.00 },
+  { id: "fr4", patronCategory: "Juvenile", itemType: "Book", finePerDay: 0.00, graceDays: 7, maxFine: 0.00, lostAfterDays: 120, lostFee: 15.00 },
+  { id: "fr5", patronCategory: "Senior", itemType: "Book", finePerDay: 0.10, graceDays: 3, maxFine: 5.00, lostAfterDays: 90, lostFee: 30.00 },
+  { id: "fr6", patronCategory: "Staff", itemType: "Any", finePerDay: 0.00, graceDays: 7, maxFine: 0.00, lostAfterDays: 180, lostFee: 0.00 },
+];
+
 export const sampleMarc = `=LDR  00000nam a2200000 a 4500
 =001  ocn123456789
 =005  20260612153045.0
