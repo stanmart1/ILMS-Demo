@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SerialsRouteImport } from './routes/serials'
+import { Route as RfidRouteImport } from './routes/rfid'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OpacRouteImport } from './routes/opac'
 import { Route as LoginRouteImport } from './routes/login'
@@ -27,6 +28,11 @@ import { Route as AcquisitionsIdRouteImport } from './routes/acquisitions.$id'
 const SerialsRoute = SerialsRouteImport.update({
   id: '/serials',
   path: '/serials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RfidRoute = RfidRouteImport.update({
+  id: '/rfid',
+  path: '/rfid',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/rfid': typeof RfidRoute
   '/serials': typeof SerialsRoute
   '/acquisitions/$id': typeof AcquisitionsIdRoute
   '/cataloging/$id': typeof CatalogingIdRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/rfid': typeof RfidRoute
   '/serials': typeof SerialsRoute
   '/acquisitions/$id': typeof AcquisitionsIdRoute
   '/cataloging/$id': typeof CatalogingIdRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
+  '/rfid': typeof RfidRoute
   '/serials': typeof SerialsRoute
   '/acquisitions/$id': typeof AcquisitionsIdRoute
   '/cataloging/$id': typeof CatalogingIdRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/opac'
     | '/reports'
+    | '/rfid'
     | '/serials'
     | '/acquisitions/$id'
     | '/cataloging/$id'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/opac'
     | '/reports'
+    | '/rfid'
     | '/serials'
     | '/acquisitions/$id'
     | '/cataloging/$id'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/opac'
     | '/reports'
+    | '/rfid'
     | '/serials'
     | '/acquisitions/$id'
     | '/cataloging/$id'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OpacRoute: typeof OpacRouteWithChildren
   ReportsRoute: typeof ReportsRoute
+  RfidRoute: typeof RfidRoute
   SerialsRoute: typeof SerialsRoute
   PatronsIdRoute: typeof PatronsIdRoute
 }
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/serials'
       fullPath: '/serials'
       preLoaderRoute: typeof SerialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rfid': {
+      id: '/rfid'
+      path: '/rfid'
+      fullPath: '/rfid'
+      preLoaderRoute: typeof RfidRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OpacRoute: OpacRouteWithChildren,
   ReportsRoute: ReportsRoute,
+  RfidRoute: RfidRoute,
   SerialsRoute: SerialsRoute,
   PatronsIdRoute: PatronsIdRoute,
 }

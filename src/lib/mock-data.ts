@@ -378,6 +378,50 @@ export const fineRules: FineRule[] = [
   { id: "fr6", patronCategory: "Staff", itemType: "Any", finePerDay: 0.00, graceDays: 7, maxFine: 0.00, lostAfterDays: 180, lostFee: 0.00 },
 ];
 
+// ─── RFID ──────────────────────────────────────────────────────────────────
+
+export type RFIDTag = {
+  id: string;
+  barcode: string;        // links to a holding item barcode
+  title: string;          // denormalized for display
+  tagId: string;          // RFID UID, e.g. "E200-3412-ABCD-1234"
+  status: "Active" | "Deactivated" | "Lost" | "Unlinked";
+  programmedAt: string;
+  lastSeen?: string;
+};
+
+export type GateEvent = {
+  id: string;
+  timestamp: string;
+  tagId: string;
+  title: string;
+  barcode: string;
+  direction: "Exit" | "Entry";
+  alarmTriggered: boolean;
+};
+
+export const rfidTags: RFIDTag[] = [
+  { id: "rf1",  barcode: "31901-00045", title: "The Sympathizer",                     tagId: "E200-3412-AB01-1001", status: "Active",      programmedAt: "2026-01-10", lastSeen: "2026-06-20" },
+  { id: "rf2",  barcode: "31901-00112", title: "Sapiens",                              tagId: "E200-3412-AB01-1002", status: "Active",      programmedAt: "2026-01-10", lastSeen: "2026-06-18" },
+  { id: "rf3",  barcode: "31901-00203", title: "Thinking, Fast and Slow",              tagId: "E200-3412-AB01-1003", status: "Active",      programmedAt: "2026-01-11", lastSeen: "2026-06-21" },
+  { id: "rf4",  barcode: "31901-00321", title: "Educated",                             tagId: "E200-3412-AB01-1004", status: "Active",      programmedAt: "2026-01-11", lastSeen: "2026-06-15" },
+  { id: "rf5",  barcode: "31901-00428", title: "Astrophysics for People in a Hurry",   tagId: "E200-3412-AB01-1005", status: "Active",      programmedAt: "2026-01-12", lastSeen: "2026-06-22" },
+  { id: "rf6",  barcode: "31901-00510", title: "The Midnight Library",                 tagId: "E200-3412-AB01-1006", status: "Active",      programmedAt: "2026-01-12", lastSeen: "2026-06-19" },
+  { id: "rf7",  barcode: "31901-00601", title: "L'Étranger",                           tagId: "E200-3412-AB01-1007", status: "Deactivated", programmedAt: "2026-02-05" },
+  { id: "rf8",  barcode: "31901-00602", title: "Cien años de soledad",                 tagId: "E200-3412-AB01-1008", status: "Active",      programmedAt: "2026-02-06", lastSeen: "2026-06-10" },
+  { id: "rf9",  barcode: "31901-00603", title: "Thinking, Fast and Slow",              tagId: "E200-3412-AB01-1009", status: "Lost",        programmedAt: "2026-02-07" },
+  { id: "rf10", barcode: "31901-00604", title: "The Sympathizer",                      tagId: "E200-3412-AB01-1010", status: "Active",      programmedAt: "2026-02-07", lastSeen: "2026-06-23" },
+];
+
+export const gateEvents: GateEvent[] = [
+  { id: "ge1", timestamp: "2026-06-24 09:14:22", tagId: "E200-3412-AB01-1001", title: "The Sympathizer",               barcode: "31901-00045", direction: "Exit",  alarmTriggered: false },
+  { id: "ge2", timestamp: "2026-06-24 09:31:05", tagId: "E200-3412-AB01-1003", title: "Thinking, Fast and Slow",       barcode: "31901-00203", direction: "Exit",  alarmTriggered: false },
+  { id: "ge3", timestamp: "2026-06-24 10:02:47", tagId: "E200-3412-AB01-1007", title: "L'Étranger",                    barcode: "31901-00601", direction: "Exit",  alarmTriggered: true  },
+  { id: "ge4", timestamp: "2026-06-24 10:18:30", tagId: "E200-3412-AB01-1005", title: "Astrophysics for People…",      barcode: "31901-00428", direction: "Entry", alarmTriggered: false },
+  { id: "ge5", timestamp: "2026-06-24 10:45:12", tagId: "E200-3412-AB01-1002", title: "Sapiens",                       barcode: "31901-00112", direction: "Exit",  alarmTriggered: false },
+  { id: "ge6", timestamp: "2026-06-24 11:03:55", tagId: "E200-3412-AB01-1009", title: "Thinking, Fast and Slow",       barcode: "31901-00603", direction: "Exit",  alarmTriggered: true  },
+];
+
 export const sampleMarc = `=LDR  00000nam a2200000 a 4500
 =001  ocn123456789
 =005  20260612153045.0

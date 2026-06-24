@@ -27,6 +27,7 @@ import {
   User,
   CheckCheck,
   BookOpen,
+  ScanLine,
 } from "lucide-react";
 
 import appCss from "../styles.css?url";
@@ -136,6 +137,7 @@ const navItems = [
   { to: "/cataloging", label: "Cataloging", icon: BookMarked },
   { to: "/acquisitions", label: "Acquisitions", icon: ShoppingCart },
   { to: "/serials", label: "Serials", icon: Newspaper },
+  { to: "/rfid", label: "RFID & Barcode", icon: ScanLine },
   { to: "/opac", label: "OPAC", icon: Search },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/admin", label: "Administration", icon: Settings },

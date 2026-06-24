@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import JsBarcode from "jsbarcode";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -580,6 +581,33 @@ function ImportMarcDialog({
   );
 }
 
+// ── Barcode SVG component (Code 128) ─────────────────────────────────────────
+
+function BarcodeImage({ value }: { value: string }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const render = useCallback(() => {
+    if (!svgRef.current) return;
+    try {
+      JsBarcode(svgRef.current, value, {
+        format: "CODE128",
+        width: 1.5,
+        height: 36,
+        displayValue: true,
+        fontSize: 9,
+        margin: 4,
+        background: "#ffffff",
+        lineColor: "#000000",
+      });
+    } catch {
+      // invalid value — leave blank
+    }
+  }, [value]);
+
+  useEffect(() => { render(); }, [render]);
+
+  return <svg ref={svgRef} className="w-full" />;
+}
+
 // ── Print label dialog ────────────────────────────────────────────────────────
 
 function PrintLabelDialog({
@@ -636,10 +664,8 @@ function PrintLabelDialog({
                 </p>
               </div>
               {/* Barcode — bottom */}
-              <div className="px-2 py-1.5">
-                <p className="font-mono text-xs tracking-widest text-foreground">
-                  {item.barcode}
-                </p>
+              <div className="px-1 pb-1">
+                <BarcodeImage value={item.barcode} />
               </div>
             </div>
           ))}
