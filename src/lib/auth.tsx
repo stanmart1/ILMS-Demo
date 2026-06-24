@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { staffUsers, type StaffUser } from "./mock-data";
 
-// Mock credentials: email = username, password = "library123" for all staff
+// Mock credentials: email = username, password = "library123" for all staff.
+// Auth reads from the unified patrons array (filtered to those with staffRole set).
+// This matches real ILS design: staff are patrons with permissions, not a separate table.
 const MOCK_PASSWORD = "library123";
 const STORAGE_KEY = "athenaeum_user_id";
 
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (email: string, password: string): boolean => {
     if (password !== MOCK_PASSWORD) return false;
+    // Only patrons with staffRole can log into the staff dashboard.
     const found = staffUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (!found) return false;
     setUser(found);

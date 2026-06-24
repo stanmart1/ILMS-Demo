@@ -57,7 +57,6 @@ import {
 import { Pencil, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  staffUsers as initialStaffUsers,
   patrons as initialPatrons,
   patronCategories as initialPatronCategories,
   itemTypes as initialItemTypes,
@@ -577,8 +576,8 @@ function StaffDialog({ open, onOpenChange, editUser, onSave }: StaffDialogProps)
           ? {
               name: editUser.name,
               email: editUser.email,
-              role: editUser.role,
-              branch: editUser.branch as "Central" | "Riverside" | "North Hill",
+              role: editUser.staffRole,
+              branch: editUser.staffBranch as "Central" | "Riverside" | "North Hill",
             }
           : { name: "", email: "", role: "Librarian", branch: "Central" }
       );
@@ -587,15 +586,21 @@ function StaffDialog({ open, onOpenChange, editUser, onSave }: StaffDialogProps)
   }, [open, editUser]);
 
   function onSubmit(values: StaffFormValues) {
-    const user: StaffUser = {
+    // Staff users ARE patrons — build a full Patron record with staffRole set.
+    const patron: StaffUser = {
       id: editUser?.id ?? genId("u"),
+      cardNumber: editUser?.cardNumber ?? `C-${Math.floor(200000 + Math.random() * 800000)}`,
       name: values.name,
       email: values.email,
-      role: values.role,
-      branch: values.branch,
+      category: "Staff",
+      status: editUser?.status ?? "Active",
+      fines: editUser?.fines ?? 0,
+      joined: editUser?.joined ?? new Date().toISOString().slice(0, 10),
+      staffRole: values.role,
+      staffBranch: values.branch,
       lastLogin: editUser?.lastLogin ?? "—",
     };
-    onSave(user);
+    onSave(patron);
     onOpenChange(false);
     toast.success(editUser ? "Staff user updated" : "Staff user added");
   }
@@ -1948,8 +1953,10 @@ function NotifTemplateDialog({
 
 function Admin() {
   // ── data state ────────────────────────────────────────────────────────────
-  const [staffList, setStaffList] = useState<StaffUser[]>(initialStaffUsers);
+  // Staff users are patrons — no separate staffList.
+  // staffList is a derived view of patronList filtered to those with staffRole.
   const [patronList, setPatronList] = useState<Patron[]>(initialPatrons);
+  const staffList = patronList.filter((p): p is StaffUser => !!p.staffRole);
   const [categoryList, setCategoryList] = useState<PatronCategory[]>(initialPatronCategories);
   const [itemTypeList, setItemTypeList] = useState<ItemType[]>(initialItemTypes);
   const [branchList, setBranchList] = useState<Branch[]>(initialBranches);
@@ -1999,11 +2006,8 @@ function Admin() {
 
   // ── save handlers ─────────────────────────────────────────────────────────
   function saveStaff(user: StaffUser) {
-    setStaffList((prev) =>
-      prev.some((u) => u.id === user.id)
-        ? prev.map((u) => (u.id === user.id ? user : u))
-        : [...prev, user]
-    );
+    // Staff are patrons — save via the unified patron handler.
+    savePatron(user);
   }
 
   function savePatron(patron: Patron) {
@@ -2104,7 +2108,7 @@ function Admin() {
     >
       {/* ── Stat cards ──────────────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Staff users" value={staffList.length} />
+        <StatCard label="Staff members" value={staffList.length} />
         <StatCard label="Patrons" value={patronList.length} accent="accent" />
         <StatCard
           label="Active branches"
@@ -2167,12 +2171,12 @@ function Admin() {
                         <TableCell className="font-medium">{u.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                         <TableCell>
-                          <Badge variant={u.role === "Admin" ? "default" : "secondary"}>
-                            {u.role}
+                          <Badge variant={u.staffRole === "Admin" ? "default" : "secondary"}>
+                            {u.staffRole}
                           </Badge>
                         </TableCell>
-                        <TableCell>{u.branch}</TableCell>
-                        <TableCell className="mono text-xs">{u.lastLogin}</TableCell>
+                        <TableCell>{u.staffBranch}</TableCell>
+                        <TableCell className="mono text-xs">{u.lastLogin ?? "—"}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
@@ -2219,6 +2223,7 @@ function Admin() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Staff role</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Fines</TableHead>
                       <TableHead>Joined</TableHead>
@@ -2232,6 +2237,15 @@ function Admin() {
                         <TableCell className="font-medium">{p.name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.email}</TableCell>
                         <TableCell>{p.category}</TableCell>
+                        <TableCell>
+                          {p.staffRole ? (
+                            <Badge variant="outline" className="text-xs">
+                              {p.staffRole}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant={

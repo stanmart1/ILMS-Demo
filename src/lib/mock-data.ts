@@ -9,6 +9,19 @@ export type Patron = {
   status: "Active" | "Suspended" | "Expired";
   fines: number;
   joined: string;
+  // Staff fields — present only on patron records that are also library employees.
+  // Granting staffRole gives this patron access to the staff dashboard.
+  staffRole?: "Admin" | "Librarian" | "Cataloger" | "Circulation Clerk";
+  staffBranch?: string;
+  lastLogin?: string;
+};
+
+// A StaffUser is simply a Patron whose staffRole is set.
+// There is no separate table — this matches how real ILS (Koha, Evergreen) work.
+export type StaffUser = Patron & {
+  staffRole: NonNullable<Patron["staffRole"]>;
+  staffBranch: string;
+  lastLogin: string;
 };
 
 export type BibRecord = {
@@ -93,25 +106,31 @@ export type SerialIssue = {
   status: "Received" | "Expected" | "Claimed" | "Late";
 };
 
-export type StaffUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: "Admin" | "Librarian" | "Cataloger" | "Circulation Clerk";
-  branch: string;
-  lastLogin: string;
-};
+// StaffUser is now defined near the top of this file as a Patron type alias.
 
 export const patrons: Patron[] = [
-  { id: "p1", cardNumber: "C-100245", name: "Eleanor Voss", email: "e.voss@mail.com", category: "Adult", status: "Active", fines: 0, joined: "2021-03-14" },
-  { id: "p2", cardNumber: "C-100871", name: "Marcus Holloway", email: "marcus.h@mail.com", category: "Student", status: "Active", fines: 4.5, joined: "2023-09-02" },
-  { id: "p3", cardNumber: "C-101120", name: "Priya Raman", email: "p.raman@mail.com", category: "Adult", status: "Active", fines: 0, joined: "2019-11-20" },
-  { id: "p4", cardNumber: "C-101455", name: "Jonas Eklund", email: "j.eklund@mail.com", category: "Senior", status: "Active", fines: 1.25, joined: "2017-05-08" },
-  { id: "p5", cardNumber: "C-101602", name: "Aisha Bello", email: "a.bello@mail.com", category: "Adult", status: "Suspended", fines: 22.0, joined: "2020-02-18" },
-  { id: "p6", cardNumber: "C-101934", name: "Tomás Rivera", email: "t.rivera@mail.com", category: "Juvenile", status: "Active", fines: 0, joined: "2024-01-11" },
-  { id: "p7", cardNumber: "C-102205", name: "Hana Watanabe", email: "h.watanabe@mail.com", category: "Staff", status: "Active", fines: 0, joined: "2018-08-30" },
-  { id: "p8", cardNumber: "C-102441", name: "Declan O'Hara", email: "d.ohara@mail.com", category: "Adult", status: "Expired", fines: 0, joined: "2015-06-22" },
+  // ── Public borrowers ────────────────────────────────────────────────────────
+  { id: "p1", cardNumber: "C-100245", name: "Eleanor Voss",       email: "e.voss@mail.com",       category: "Adult",    status: "Active",    fines: 0,    joined: "2021-03-14" },
+  { id: "p2", cardNumber: "C-100871", name: "Marcus Holloway",    email: "marcus.h@mail.com",      category: "Student",  status: "Active",    fines: 4.5,  joined: "2023-09-02" },
+  { id: "p3", cardNumber: "C-101120", name: "Priya Raman",        email: "p.raman@mail.com",       category: "Adult",    status: "Active",    fines: 0,    joined: "2019-11-20" },
+  { id: "p4", cardNumber: "C-101455", name: "Jonas Eklund",       email: "j.eklund@mail.com",      category: "Senior",   status: "Active",    fines: 1.25, joined: "2017-05-08" },
+  { id: "p5", cardNumber: "C-101602", name: "Aisha Bello",        email: "a.bello@mail.com",       category: "Adult",    status: "Suspended", fines: 22.0, joined: "2020-02-18" },
+  { id: "p6", cardNumber: "C-101934", name: "Tomás Rivera",       email: "t.rivera@mail.com",      category: "Juvenile", status: "Active",    fines: 0,    joined: "2024-01-11" },
+  { id: "p7", cardNumber: "C-102205", name: "Hana Watanabe",      email: "h.watanabe@mail.com",    category: "Staff",    status: "Active",    fines: 0,    joined: "2018-08-30" },
+  { id: "p8", cardNumber: "C-102441", name: "Declan O'Hara",      email: "d.ohara@mail.com",       category: "Adult",    status: "Expired",   fines: 0,    joined: "2015-06-22" },
+  // ── Staff patrons (also library employees — staffRole grants dashboard access) ─
+  { id: "u1", cardNumber: "C-200001", name: "Margaret Carrington", email: "m.carrington@library.org", category: "Staff", status: "Active", fines: 0, joined: "2018-01-15", staffRole: "Admin",             staffBranch: "Central",    lastLogin: "2026-06-24 08:14" },
+  { id: "u2", cardNumber: "C-200002", name: "James Okafor",        email: "j.okafor@library.org",     category: "Staff", status: "Active", fines: 0, joined: "2019-03-20", staffRole: "Librarian",         staffBranch: "Central",    lastLogin: "2026-06-24 07:58" },
+  { id: "u3", cardNumber: "C-200003", name: "Sofía Mendez",        email: "s.mendez@library.org",     category: "Staff", status: "Active", fines: 0, joined: "2020-06-10", staffRole: "Cataloger",         staffBranch: "Riverside",  lastLogin: "2026-06-23 16:42" },
+  { id: "u4", cardNumber: "C-200004", name: "Henrik Lindqvist",    email: "h.lindqvist@library.org",  category: "Staff", status: "Active", fines: 0, joined: "2021-09-01", staffRole: "Circulation Clerk", staffBranch: "Central",    lastLogin: "2026-06-24 09:02" },
+  { id: "u5", cardNumber: "C-200005", name: "Aaliyah Brooks",      email: "a.brooks@library.org",     category: "Staff", status: "Active", fines: 0, joined: "2022-02-14", staffRole: "Librarian",         staffBranch: "North Hill", lastLogin: "2026-06-22 14:30" },
 ];
+
+// Derived view: all patrons whose staffRole is set.
+// Kept for backward compatibility — no separate table exists.
+export const staffUsers: StaffUser[] = patrons.filter(
+  (p): p is StaffUser => !!p.staffRole,
+);
 
 export const bibRecords: BibRecord[] = [
   { id: "b1", isbn: "9780143127741", title: "The Sympathizer", author: "Viet Thanh Nguyen", publisher: "Grove Press", year: 2015, callNumber: "PS3614.G97 S96", format: "MARC21", subjects: ["Fiction", "Vietnam War", "Espionage"], copies: 4, available: 2 },
@@ -183,13 +202,7 @@ export const serialIssues: SerialIssue[] = [
   { id: "si7", title: "Foreign Affairs", issue: "Jul/Aug 2026", expected: "2026-07-15", received: null, status: "Expected" },
 ];
 
-export const staffUsers: StaffUser[] = [
-  { id: "u1", name: "Margaret Carrington", email: "m.carrington@library.org", role: "Admin", branch: "Central", lastLogin: "2026-06-24 08:14" },
-  { id: "u2", name: "James Okafor", email: "j.okafor@library.org", role: "Librarian", branch: "Central", lastLogin: "2026-06-24 07:58" },
-  { id: "u3", name: "Sofía Mendez", email: "s.mendez@library.org", role: "Cataloger", branch: "Riverside", lastLogin: "2026-06-23 16:42" },
-  { id: "u4", name: "Henrik Lindqvist", email: "h.lindqvist@library.org", role: "Circulation Clerk", branch: "Central", lastLogin: "2026-06-24 09:02" },
-  { id: "u5", name: "Aaliyah Brooks", email: "a.brooks@library.org", role: "Librarian", branch: "North Hill", lastLogin: "2026-06-22 14:30" },
-];
+// staffUsers is now a derived view of patrons — see declaration near the top of this file.
 
 // ─── Extended data types ───────────────────────────────────────────────────
 

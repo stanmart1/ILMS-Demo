@@ -328,7 +328,7 @@ function AppLayout() {
           <div className="h-5 w-px bg-border" />
           <div className="flex items-center gap-2">
             <span className="font-serif text-sm font-semibold tracking-tight">Athenaeum</span>
-            <span className="hidden text-xs text-muted-foreground sm:inline">— {user.branch} Branch</span>
+            <span className="hidden text-xs text-muted-foreground sm:inline">— {user.staffBranch} Branch</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden text-xs text-muted-foreground sm:inline">
