@@ -28,7 +28,7 @@ export const Route = createFileRoute("/acquisitions")({
 });
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+const fmt = (n: number) => "₦" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ─── Local types ───────────────────────────────────────────────────────────
 type LineItem = {

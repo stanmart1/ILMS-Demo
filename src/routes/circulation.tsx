@@ -106,7 +106,7 @@ function PatronPanel({ patronId, open, onClose, checkouts, fines }: {
           <div>
             <div className="mb-2 flex items-center justify-between">
               <div className="font-medium text-sm">Outstanding fines</div>
-              {totalOwed > 0 && <span className="text-destructive font-semibold text-sm">${totalOwed.toFixed(2)}</span>}
+              {totalOwed > 0 && <span className="text-destructive font-semibold text-sm">₦{totalOwed.toFixed(2)}</span>}
             </div>
             {patronFines.length === 0 ? (
               <p className="text-sm text-muted-foreground">No outstanding fines.</p>
@@ -118,7 +118,7 @@ function PatronPanel({ patronId, open, onClose, checkouts, fines }: {
                       <div className="font-medium">{f.itemTitle}</div>
                       <div className="text-xs text-muted-foreground">{f.type} · {f.date}</div>
                     </div>
-                    <span className="text-destructive font-mono font-medium">${f.amount.toFixed(2)}</span>
+                    <span className="text-destructive font-mono font-medium">₦{f.amount.toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
@@ -249,7 +249,7 @@ function PayFineDialog({ fine, open, onClose, onPay }: {
         <AlertDialogHeader>
           <AlertDialogTitle className="font-serif">Process fine payment</AlertDialogTitle>
           <AlertDialogDescription>
-            Collect <strong>${fine.amount.toFixed(2)}</strong> from <strong>{fine.patronName}</strong> for {fine.type.toLowerCase()} on "{fine.itemTitle}".
+            Collect <strong>₦{fine.amount.toFixed(2)}</strong> from <strong>{fine.patronName}</strong> for {fine.type.toLowerCase()} on "{fine.itemTitle}".
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -424,7 +424,7 @@ function Circulation() {
     if (patron.status !== "Active") return toast.error(`Patron is ${patron.status.toLowerCase()}`);
     const patronFines = fines.filter((f) => f.patronId === patron.id && !f.paid);
     if (patronFines.reduce((s, f) => s + f.amount, 0) >= 10) {
-      return toast.error("Patron has $10+ in fines. Please clear fines before checkout.");
+      return toast.error("Patron has ₦10+ in fines. Please clear fines before checkout.");
     }
     const due = new Date(); due.setDate(due.getDate() + 28);
     setCheckouts((prev) => [
@@ -489,7 +489,7 @@ function Circulation() {
         <StatCard label="Items on loan" value={onLoanCount} />
         <StatCard label="Overdue" value={overdueCount} accent="destructive" />
         <StatCard label="Holds in queue" value={holds.length} accent="accent" />
-        <StatCard label="Fines owed" value={`$${totalFinesOwed.toFixed(2)}`} accent="warning" />
+        <StatCard label="Fines owed" value={`₦${totalFinesOwed.toFixed(2)}`} accent="warning" />
       </div>
 
       <div className="mt-6">
@@ -535,7 +535,7 @@ function Circulation() {
                     )}
                   </div>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">Loan period: 28 days · Max renewals: 2 · Blocked if fines ≥ $10 · Try card <span className="mono">C-100245</span></p>
+                <p className="mt-3 text-xs text-muted-foreground">Loan period: 28 days · Max renewals: 2 · Blocked if fines ≥ ₦10 · Try card <span className="mono">C-100245</span></p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -650,7 +650,7 @@ function Circulation() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="font-serif">Patron fines</CardTitle>
                 <div className="text-sm text-muted-foreground">
-                  Outstanding: <span className="font-semibold text-destructive">${unpaidFines.reduce((s, f) => s + f.amount, 0).toFixed(2)}</span>
+                  Outstanding: <span className="font-semibold text-destructive">₦{unpaidFines.reduce((s, f) => s + f.amount, 0).toFixed(2)}</span>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -679,7 +679,7 @@ function Circulation() {
                         <TableCell className="text-sm">{f.itemTitle}</TableCell>
                         <TableCell><Badge variant="outline">{f.type}</Badge></TableCell>
                         <TableCell className="mono text-xs">{f.date}</TableCell>
-                        <TableCell className={`text-right mono font-medium ${!f.paid ? "text-destructive" : ""}`}>${f.amount.toFixed(2)}</TableCell>
+                        <TableCell className={`text-right mono font-medium ${!f.paid ? "text-destructive" : ""}`}>₦{f.amount.toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={f.paid ? "default" : "destructive"}>{f.paid ? "Paid" : "Unpaid"}</Badge>
                         </TableCell>

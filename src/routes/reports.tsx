@@ -68,7 +68,7 @@ const CHART_TYPE_ICONS: Record<ChartType, React.ElementType> = {
 
 function CellValue({ type, value }: { type: string; value: unknown }) {
   if (value == null || value === "") return <span className="text-muted-foreground">—</span>;
-  if (type === "currency") return <span className="font-mono">${(value as number).toFixed(2)}</span>;
+  if (type === "currency") return <span className="font-mono">₦{(value as number).toFixed(2)}</span>;
   if (type === "percent") return <span className="font-mono">{value}%</span>;
   if (type === "number") return <span className="font-mono">{value as number}</span>;
   if (type === "badge") {
@@ -893,8 +893,8 @@ function AnalyticsDashboard() {
                 onClick={(d) => d?.activeLabel && setDrillKey(d.activeLabel)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="type" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${(v as number).toFixed(2)}`} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `₦${v}`} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v) => `₦${(v as number).toFixed(2)}`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="assessed" name="Assessed" fill="var(--color-chart-4)" radius={[3, 3, 0, 0]}
                   onClick={(d) => setDrillKey(d.type)} />
@@ -914,8 +914,8 @@ function AnalyticsDashboard() {
               <BarChart data={budgetData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="fund" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => `$${(v as number).toLocaleString()}`} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v) => `₦${(v as number).toLocaleString()}`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="allocated" name="Allocated" fill="var(--color-chart-2)" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="spent" name="Spent" fill="var(--color-chart-4)" radius={[3, 3, 0, 0]} />

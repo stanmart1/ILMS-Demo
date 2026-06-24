@@ -938,7 +938,7 @@ function OPAC() {
                   </h3>
                   {outstandingTotal > 0 && (
                     <Badge variant="destructive" className="text-[10px]">
-                      Outstanding: ${outstandingTotal.toFixed(2)}
+                      Outstanding: ₦{outstandingTotal.toFixed(2)}
                     </Badge>
                   )}
                 </div>
@@ -967,7 +967,7 @@ function OPAC() {
                               {fine.type}
                             </Badge>
                             <span className="text-sm font-semibold">
-                              ${fine.amount.toFixed(2)}
+                              ₦{fine.amount.toFixed(2)}
                             </span>
                             {fine.paid ? (
                               <Badge className="bg-success text-success-foreground text-[10px]">

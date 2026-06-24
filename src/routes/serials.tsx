@@ -993,7 +993,7 @@ function Serials() {
                 <>
                   Cost:{" "}
                   <strong>
-                    ${RENEWAL_COST[renewTarget.frequency].toLocaleString()}
+                    ₦{RENEWAL_COST[renewTarget.frequency].toLocaleString()}
                   </strong>
                   .
                 </>

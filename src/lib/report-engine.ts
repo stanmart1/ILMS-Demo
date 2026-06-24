@@ -77,7 +77,7 @@ export type ReportDefinition = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt$$(n: number) {
-  return `$${n.toFixed(2)}`;
+  return `₦${n.toFixed(2)}`;
 }
 
 function pct(num: number, denom: number) {
@@ -296,7 +296,7 @@ function computeOutstandingFines(): ReportResult {
     summaryStats: [
       { label: "Patrons with fines", value: rows.length, accent: rows.length > 0 ? "warning" : "success" },
       { label: "Total outstanding", value: fmt$$(totalOwed), accent: "destructive" },
-      { label: "Avg per patron", value: rows.length ? fmt$$(totalOwed / rows.length) : "$0.00" },
+      { label: "Avg per patron", value: rows.length ? fmt$$(totalOwed / rows.length) : "₦0.00" },
     ],
     chartData,
     chartConfig: {

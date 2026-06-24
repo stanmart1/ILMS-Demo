@@ -22,7 +22,7 @@ export const Route = createFileRoute("/acquisitions/$id")({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
-  n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  "₦" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ── Title pool for mock line items ────────────────────────────────────────────
 const TITLE_POOL = [

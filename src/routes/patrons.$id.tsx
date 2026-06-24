@@ -157,7 +157,7 @@ function PatronDetail() {
                   <div
                     className={`font-serif text-2xl font-semibold ${outstandingFines > 0 ? "text-destructive" : ""}`}
                   >
-                    ${outstandingFines.toFixed(2)}
+                    ₦{outstandingFines.toFixed(2)}
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
                     Outstanding fines
@@ -290,7 +290,7 @@ function PatronDetail() {
               <Badge
                 variant={outstandingFines > 0 ? "destructive" : "secondary"}
               >
-                ${outstandingFines.toFixed(2)}
+                ₦{outstandingFines.toFixed(2)}
               </Badge>
             </div>
           )}
@@ -324,7 +324,7 @@ function PatronDetail() {
                           <TableCell
                             className={`text-right font-mono ${!f.paid ? "text-destructive" : ""}`}
                           >
-                            ${f.amount.toFixed(2)}
+                            ₦{f.amount.toFixed(2)}
                           </TableCell>
                           <TableCell>
                             <Badge variant={f.paid ? "default" : "secondary"}>

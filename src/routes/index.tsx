@@ -136,7 +136,7 @@ function Dashboard() {
                   <div className="mb-4">
                     <div className="flex items-baseline justify-between text-sm">
                       <span className="text-muted-foreground">FY 2026 total spend</span>
-                      <span className="font-mono">${spentBudget.toLocaleString()} / ${totalBudget.toLocaleString()}</span>
+                      <span className="font-mono">₦{spentBudget.toLocaleString()} / ₦{totalBudget.toLocaleString()}</span>
                     </div>
                     <Progress value={(spentBudget / totalBudget) * 100} className="mt-2" />
                   </div>
@@ -208,7 +208,7 @@ function Dashboard() {
             <div className="mb-4">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted-foreground">FY 2026 spend</span>
-                <span className="font-mono text-sm">${spentBudget.toLocaleString()} / ${totalBudget.toLocaleString()}</span>
+                <span className="font-mono text-sm">₦{spentBudget.toLocaleString()} / ₦{totalBudget.toLocaleString()}</span>
               </div>
               <Progress value={(spentBudget / totalBudget) * 100} className="mt-2" />
             </div>

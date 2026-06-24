@@ -209,7 +209,7 @@ const defaultTemplates: NotifTemplate[] = [
   {
     id: "nt4",
     name: "Fine notice",
-    trigger: "Fine exceeds $5.00",
+    trigger: "Fine exceeds ₦5.00",
     subject: "Outstanding fine on your account",
     body: "Dear {{patron_name}},\n\nYour library account has an outstanding fine of {{fine_amount}}. Please settle this at your earliest convenience.\n\nRegards,\nAthenaeum Library",
     active: false,
@@ -1803,7 +1803,7 @@ const PREVIEW_VARS: Record<string, string> = {
   patron_name: "Eleanor Voss",
   title: "Sapiens",
   due_date: "2026-07-15",
-  fine_amount: "$4.50",
+  fine_amount: "₦4.50",
   branch: "Central",
   expiry_date: "2026-08-01",
 };
@@ -2262,7 +2262,7 @@ function Admin() {
                         <TableCell
                           className={`text-right mono ${p.fines > 0 ? "text-destructive" : ""}`}
                         >
-                          ${p.fines.toFixed(2)}
+                          ₦{p.fines.toFixed(2)}
                         </TableCell>
                         <TableCell className="mono text-xs">{p.joined}</TableCell>
                         <TableCell>
@@ -2405,7 +2405,7 @@ function Admin() {
                         <TableCell className="text-right mono">{r.loanDays}</TableCell>
                         <TableCell className="text-right mono">{r.renewals}</TableCell>
                         <TableCell className="text-right mono">
-                          ${r.finePerDay.toFixed(2)}
+                          ₦{r.finePerDay.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right mono">{r.maxCheckouts}</TableCell>
                         <TableCell className="text-center">
@@ -2473,10 +2473,10 @@ function Admin() {
                         <TableCell className="text-right mono">{c.maxCheckouts}</TableCell>
                         <TableCell className="text-right mono">{c.maxRenewals}</TableCell>
                         <TableCell className="text-right mono">
-                          ${c.finePerDay.toFixed(2)}
+                          ₦{c.finePerDay.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right mono">
-                          ${c.registrationFee.toFixed(2)}
+                          ₦{c.registrationFee.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {c.description}
@@ -2540,7 +2540,7 @@ function Admin() {
                         <TableCell className="text-right mono">{t.loanPeriod}</TableCell>
                         <TableCell className="text-right mono">{t.renewals}</TableCell>
                         <TableCell className="text-right mono">
-                          ${t.finePerDay.toFixed(2)}
+                          ₦{t.finePerDay.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant={t.notForLoan ? "destructive" : "outline"}>
@@ -2684,12 +2684,12 @@ function Admin() {
                         <TableCell>{r.patronCategory}</TableCell>
                         <TableCell>{r.itemType}</TableCell>
                         <TableCell className="text-right mono">
-                          ${r.finePerDay.toFixed(2)}
+                          ₦{r.finePerDay.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right mono">{r.graceDays}</TableCell>
-                        <TableCell className="text-right mono">${r.maxFine.toFixed(2)}</TableCell>
+                        <TableCell className="text-right mono">₦{r.maxFine.toFixed(2)}</TableCell>
                         <TableCell className="text-right mono">{r.lostAfterDays}</TableCell>
-                        <TableCell className="text-right mono">${r.lostFee.toFixed(2)}</TableCell>
+                        <TableCell className="text-right mono">₦{r.lostFee.toFixed(2)}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
