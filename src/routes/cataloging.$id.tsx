@@ -231,65 +231,67 @@ function CatalogingDetail() {
         <TabsContent value="holdings" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-mono">Barcode</TableHead>
-                    <TableHead>Branch</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Item type</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {holdingRows.map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-mono text-xs">
-                        {row.barcode}
-                      </TableCell>
-                      <TableCell>{row.branch}</TableCell>
-                      <TableCell>{row.location}</TableCell>
-                      <TableCell>{row.itemType}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            row.status === "Available"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {row.status}
-                        </Badge>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-mono">Barcode</TableHead>
+                      <TableHead>Branch</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Item type</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                  {activeCheckouts.length > 0 && (
-                    <>
-                      <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="bg-muted/40 py-1 text-xs text-muted-foreground font-medium"
-                        >
-                          Currently on loan (from Circulation)
+                  </TableHeader>
+                  <TableBody>
+                    {holdingRows.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-mono text-xs">
+                          {row.barcode}
+                        </TableCell>
+                        <TableCell>{row.branch}</TableCell>
+                        <TableCell>{row.location}</TableCell>
+                        <TableCell>{row.itemType}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              row.status === "Available"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {row.status}
+                          </Badge>
                         </TableCell>
                       </TableRow>
-                      {activeCheckouts.map((c) => (
-                        <TableRow key={c.id}>
-                          <TableCell className="font-mono text-xs">
-                            {c.barcode}
-                          </TableCell>
-                          <TableCell>Central</TableCell>
-                          <TableCell>General stacks</TableCell>
-                          <TableCell>Book</TableCell>
-                          <TableCell>
-                            <Badge variant="destructive">{c.status}</Badge>
+                    ))}
+                    {activeCheckouts.length > 0 && (
+                      <>
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="bg-muted/40 py-1 text-xs text-muted-foreground font-medium"
+                          >
+                            Currently on loan (from Circulation)
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </>
-                  )}
-                </TableBody>
-              </Table>
+                        {activeCheckouts.map((c) => (
+                          <TableRow key={c.id}>
+                            <TableCell className="font-mono text-xs">
+                              {c.barcode}
+                            </TableCell>
+                            <TableCell>Central</TableCell>
+                            <TableCell>General stacks</TableCell>
+                            <TableCell>Book</TableCell>
+                            <TableCell>
+                              <Badge variant="destructive">{c.status}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -298,37 +300,39 @@ function CatalogingDetail() {
         <TabsContent value="marc" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16 font-mono">Tag</TableHead>
-                    <TableHead className="w-10 font-mono">Ind1</TableHead>
-                    <TableHead className="w-10 font-mono">Ind2</TableHead>
-                    <TableHead className="font-mono">Subfields</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {marcFields.map((f, i) => (
-                    <TableRow
-                      key={i}
-                      className={i % 2 === 0 ? "bg-muted/30" : ""}
-                    >
-                      <TableCell className="font-mono text-xs font-semibold">
-                        {f.tag}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {f.ind1}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {f.ind2}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {f.subfields}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16 font-mono">Tag</TableHead>
+                      <TableHead className="w-10 font-mono">Ind1</TableHead>
+                      <TableHead className="w-10 font-mono">Ind2</TableHead>
+                      <TableHead className="font-mono">Subfields</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {marcFields.map((f, i) => (
+                      <TableRow
+                        key={i}
+                        className={i % 2 === 0 ? "bg-muted/30" : ""}
+                      >
+                        <TableCell className="font-mono text-xs font-semibold">
+                          {f.tag}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">
+                          {f.ind1}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">
+                          {f.ind2}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {f.subfields}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

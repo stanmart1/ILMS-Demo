@@ -82,36 +82,38 @@ function OPACDetail() {
             <h2 className="font-serif text-lg font-semibold mb-4">Holdings ({holdings.length} copies)</h2>
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Branch</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Call no.</TableHead>
-                      <TableHead className="mono">Barcode</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Due</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {holdings.map((h, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{h.branch}</TableCell>
-                        <TableCell>{h.location}</TableCell>
-                        <TableCell className="mono text-xs">{h.callNumber}</TableCell>
-                        <TableCell className="mono text-xs">{h.barcode}</TableCell>
-                        <TableCell>{h.itemType}</TableCell>
-                        <TableCell>
-                          <Badge variant={h.status === "Available" ? "default" : h.status === "On loan" ? "destructive" : "outline"}>
-                            {h.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="mono text-xs text-muted-foreground">{h.dueDate ?? "—"}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Branch</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Call no.</TableHead>
+                        <TableHead className="mono">Barcode</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Due</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {holdings.map((h, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{h.branch}</TableCell>
+                          <TableCell>{h.location}</TableCell>
+                          <TableCell className="mono text-xs">{h.callNumber}</TableCell>
+                          <TableCell className="mono text-xs">{h.barcode}</TableCell>
+                          <TableCell>{h.itemType}</TableCell>
+                          <TableCell>
+                            <Badge variant={h.status === "Available" ? "default" : h.status === "On loan" ? "destructive" : "outline"}>
+                              {h.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="mono text-xs text-muted-foreground">{h.dueDate ?? "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </div>

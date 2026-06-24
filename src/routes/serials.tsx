@@ -133,6 +133,7 @@ function PredictionPatternsTab({ subscriptions }: { subscriptions: Subscription[
           <p className="text-sm text-muted-foreground">Configure the expected issue schedule for each subscription. Click a row to preview upcoming issues.</p>
         </CardHeader>
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -168,6 +169,7 @@ function PredictionPatternsTab({ subscriptions }: { subscriptions: Subscription[
               })}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -511,13 +513,15 @@ function Serials() {
 
       <div className="mt-6">
         <Tabs defaultValue="subs">
-          <TabsList>
-            <TabsTrigger value="subs">Subscriptions</TabsTrigger>
-            <TabsTrigger value="issues">Issue check-in</TabsTrigger>
-            <TabsTrigger value="claims">Claims</TabsTrigger>
-            <TabsTrigger value="routing">Routing</TabsTrigger>
-            <TabsTrigger value="patterns"><CalendarDays className="mr-1.5 h-4 w-4" />Prediction patterns</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="w-max min-w-full">
+              <TabsTrigger value="subs">Subscriptions</TabsTrigger>
+              <TabsTrigger value="issues">Issue check-in</TabsTrigger>
+              <TabsTrigger value="claims">Claims</TabsTrigger>
+              <TabsTrigger value="routing">Routing</TabsTrigger>
+              <TabsTrigger value="patterns"><CalendarDays className="mr-1.5 h-4 w-4" />Prediction patterns</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ════ Subscriptions tab ════ */}
           <TabsContent value="subs" className="mt-4">
@@ -530,6 +534,7 @@ function Serials() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -582,6 +587,7 @@ function Serials() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -595,6 +601,7 @@ function Serials() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -643,6 +650,7 @@ function Serials() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -668,6 +676,7 @@ function Serials() {
                     No late or claimed issues at this time.
                   </p>
                 ) : (
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -711,6 +720,7 @@ function Serials() {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -727,6 +737,7 @@ function Serials() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -772,6 +783,7 @@ function Serials() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -157,13 +157,13 @@ function NewPODialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New purchase order</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="vendor"
@@ -239,8 +239,8 @@ function NewPODialog({
               </div>
 
               <div className="space-y-2">
-                {/* Column headers */}
-                <div className="grid grid-cols-[1fr_80px_110px_36px] gap-2 px-1">
+                {/* Column headers — hidden on mobile (labels shown inline instead) */}
+                <div className="hidden grid-cols-[1fr_80px_110px_36px] gap-2 px-1 sm:grid">
                   <span className="text-xs text-muted-foreground">Title</span>
                   <span className="text-xs text-muted-foreground">Qty</span>
                   <span className="text-xs text-muted-foreground">Unit price</span>
@@ -248,7 +248,7 @@ function NewPODialog({
                 </div>
 
                 {fields.map((fieldItem, idx) => (
-                  <div key={fieldItem.id} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-start">
+                  <div key={fieldItem.id} className="grid grid-cols-1 gap-2 items-start sm:grid-cols-[1fr_80px_110px_36px]">
                     <FormField
                       control={form.control}
                       name={`lineItems.${idx}.title`}
@@ -843,6 +843,7 @@ function Acquisitions() {
           <TabsContent value="orders" className="mt-4">
             <Card>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -909,6 +910,7 @@ function Acquisitions() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -975,6 +977,7 @@ function Acquisitions() {
             </div>
             <Card>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1008,6 +1011,7 @@ function Acquisitions() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1016,6 +1020,7 @@ function Acquisitions() {
           <TabsContent value="invoices" className="mt-4">
             <Card>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1089,6 +1094,7 @@ function Acquisitions() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

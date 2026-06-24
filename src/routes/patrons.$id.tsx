@@ -177,50 +177,52 @@ function PatronDetail() {
           ) : (
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="font-mono">Barcode</TableHead>
-                      <TableHead>Checked out</TableHead>
-                      <TableHead>Due date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Renewals</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {patronCheckouts.map((c) => (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-medium">{c.title}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {c.barcode}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {c.checkedOut}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {c.dueDate}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              c.status === "On loan"
-                                ? "secondary"
-                                : c.status === "Overdue"
-                                  ? "destructive"
-                                  : "outline"
-                            }
-                          >
-                            {c.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {c.renewals}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="font-mono">Barcode</TableHead>
+                        <TableHead>Checked out</TableHead>
+                        <TableHead>Due date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Renewals</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {patronCheckouts.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell className="font-medium">{c.title}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {c.barcode}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {c.checkedOut}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {c.dueDate}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                c.status === "On loan"
+                                  ? "secondary"
+                                  : c.status === "Overdue"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                            >
+                              {c.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {c.renewals}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -235,42 +237,44 @@ function PatronDetail() {
           ) : (
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Placed date</TableHead>
-                      <TableHead>Pickup branch</TableHead>
-                      <TableHead className="text-right">Queue position</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {patronHolds.map((h) => (
-                      <TableRow key={h.id}>
-                        <TableCell className="font-medium">{h.title}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {h.placed}
-                        </TableCell>
-                        <TableCell>{h.pickupBranch}</TableCell>
-                        <TableCell className="text-right">{h.position}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              h.status === "Ready for pickup"
-                                ? "default"
-                                : h.status === "In transit"
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                          >
-                            {h.status}
-                          </Badge>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Placed date</TableHead>
+                        <TableHead>Pickup branch</TableHead>
+                        <TableHead className="text-right">Queue position</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {patronHolds.map((h) => (
+                        <TableRow key={h.id}>
+                          <TableCell className="font-medium">{h.title}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {h.placed}
+                          </TableCell>
+                          <TableCell>{h.pickupBranch}</TableCell>
+                          <TableCell className="text-right">{h.position}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                h.status === "Ready for pickup"
+                                  ? "default"
+                                  : h.status === "In transit"
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                            >
+                              {h.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -297,42 +301,44 @@ function PatronDetail() {
           ) : (
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {patronFines.map((f) => (
-                      <TableRow key={f.id}>
-                        <TableCell className="font-medium">
-                          {f.itemTitle}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{f.type}</Badge>
-                        </TableCell>
-                        <TableCell
-                          className={`text-right font-mono ${!f.paid ? "text-destructive" : ""}`}
-                        >
-                          ${f.amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={f.paid ? "default" : "secondary"}>
-                            {f.paid ? "Paid" : "Unpaid"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {f.date}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Paid</TableHead>
+                        <TableHead>Date</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {patronFines.map((f) => (
+                        <TableRow key={f.id}>
+                          <TableCell className="font-medium">
+                            {f.itemTitle}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{f.type}</Badge>
+                          </TableCell>
+                          <TableCell
+                            className={`text-right font-mono ${!f.paid ? "text-destructive" : ""}`}
+                          >
+                            ${f.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={f.paid ? "default" : "secondary"}>
+                              {f.paid ? "Paid" : "Unpaid"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {f.date}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           )}

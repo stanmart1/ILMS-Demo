@@ -45,7 +45,7 @@ function LoginPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
             <Library className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight">Athenaeum</h1>
+          <h1 className="mt-4 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Athenaeum</h1>
           <p className="mt-1 text-sm text-muted-foreground">Library Management System — Staff Portal</p>
         </div>
 

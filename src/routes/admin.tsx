@@ -408,7 +408,7 @@ function PatronDialog({ open, onOpenChange, editPatron, onSave }: PatronDialogPr
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="cardNumber"
@@ -449,7 +449,7 @@ function PatronDialog({ open, onOpenChange, editPatron, onSave }: PatronDialogPr
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="email"
@@ -490,7 +490,7 @@ function PatronDialog({ open, onOpenChange, editPatron, onSave }: PatronDialogPr
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="category"
@@ -634,7 +634,7 @@ function StaffDialog({ open, onOpenChange, editUser, onSave }: StaffDialogProps)
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="role"
@@ -772,7 +772,7 @@ function PatronCategoryDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
@@ -800,7 +800,7 @@ function PatronCategoryDialog({
                 )}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="loanPeriod"
@@ -841,7 +841,7 @@ function PatronCategoryDialog({
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="finePerDay"
@@ -940,7 +940,7 @@ function ItemTypeDialog({ open, onOpenChange, editItemType, onSave }: ItemTypeDi
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="code"
@@ -968,7 +968,7 @@ function ItemTypeDialog({ open, onOpenChange, editItemType, onSave }: ItemTypeDi
                 )}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="loanPeriod"
@@ -1085,7 +1085,7 @@ function BranchDialog({ open, onOpenChange, editBranch, onSave }: BranchDialogPr
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
@@ -1126,7 +1126,7 @@ function BranchDialog({ open, onOpenChange, editBranch, onSave }: BranchDialogPr
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="phone"
@@ -1249,7 +1249,7 @@ function CircRuleDialog({ open, onOpenChange, editRule, onSave }: CircRuleDialog
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="patronCategory"
@@ -1277,7 +1277,7 @@ function CircRuleDialog({ open, onOpenChange, editRule, onSave }: CircRuleDialog
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="loanDays"
@@ -1305,7 +1305,7 @@ function CircRuleDialog({ open, onOpenChange, editRule, onSave }: CircRuleDialog
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="finePerDay"
@@ -1426,7 +1426,7 @@ function FineRuleDialog({ open, onOpenChange, editRule, onSave }: FineRuleDialog
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="patronCategory"
@@ -1454,7 +1454,7 @@ function FineRuleDialog({ open, onOpenChange, editRule, onSave }: FineRuleDialog
                 )}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="finePerDay"
@@ -1495,7 +1495,7 @@ function FineRuleDialog({ open, onOpenChange, editRule, onSave }: FineRuleDialog
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="lostAfterDays"
@@ -1598,7 +1598,7 @@ function Z3950Dialog({ open, onOpenChange, editServer, onSave }: Z3950DialogProp
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
@@ -1626,7 +1626,7 @@ function Z3950Dialog({ open, onOpenChange, editServer, onSave }: Z3950DialogProp
                 )}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="host"
@@ -1654,7 +1654,7 @@ function Z3950Dialog({ open, onOpenChange, editServer, onSave }: Z3950DialogProp
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="protocol"
@@ -1847,7 +1847,7 @@ function NotifTemplateDialog({
           <DialogTitle>{editTemplate ? "Edit template" : "New template"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Name</Label>
               <Input
@@ -1865,7 +1865,7 @@ function NotifTemplateDialog({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Channel</Label>
               <Select
@@ -2117,8 +2117,8 @@ function Admin() {
       {/* ── Tabs ────────────────────────────────────────────────────────────── */}
       <div className="mt-6">
         <Tabs defaultValue="staff">
-          <div className="overflow-x-auto pb-1">
-            <TabsList className="w-max">
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="w-max min-w-full">
               <TabsTrigger value="staff">Staff &amp; roles</TabsTrigger>
               <TabsTrigger value="patrons">Patrons</TabsTrigger>
               <TabsTrigger value="settings">System settings</TabsTrigger>
@@ -2149,6 +2149,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2189,6 +2190,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2209,6 +2211,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2278,6 +2281,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2365,6 +2369,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2411,6 +2416,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2431,6 +2437,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2477,6 +2484,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2497,6 +2505,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2541,6 +2550,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2561,6 +2571,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2618,6 +2629,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2638,6 +2650,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2680,6 +2693,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2699,6 +2713,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2766,6 +2781,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
             <AlertDialog
@@ -2928,6 +2944,7 @@ function Admin() {
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2991,6 +3008,7 @@ function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

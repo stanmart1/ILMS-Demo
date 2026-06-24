@@ -123,57 +123,59 @@ function AcquisitionsDetail() {
         <TabsContent value="lines" className="mt-4">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12 text-right">#</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead className="text-right w-14">Qty</TableHead>
-                    <TableHead className="text-right">Unit price</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead>Fund</TableHead>
-                    <TableHead>Received</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockLines.map((line) => (
-                    <TableRow key={line.lineNo}>
-                      <TableCell className="text-right text-muted-foreground">
-                        {line.lineNo}
-                      </TableCell>
-                      <TableCell className="font-medium">{line.title}</TableCell>
-                      <TableCell className="text-right">{line.qty}</TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {fmt(line.unitPrice)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {fmt(line.qty * line.unitPrice)}
-                      </TableCell>
-                      <TableCell>{line.fund}</TableCell>
-                      <TableCell>
-                        {line.received ? (
-                          <span className="flex items-center gap-1 text-success text-sm">
-                            <Check className="h-3.5 w-3.5" />
-                            Received
-                          </span>
-                        ) : (
-                          <Badge variant="outline">Pending</Badge>
-                        )}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12 text-right">#</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead className="text-right w-14">Qty</TableHead>
+                      <TableHead className="text-right">Unit price</TableHead>
+                      <TableHead className="text-right">Subtotal</TableHead>
+                      <TableHead>Fund</TableHead>
+                      <TableHead>Received</TableHead>
                     </TableRow>
-                  ))}
-                  {/* Total row */}
-                  <TableRow className="bg-muted/30 font-semibold">
-                    <TableCell colSpan={4} className="text-right text-sm">
-                      Total
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {fmt(lineTotal)}
-                    </TableCell>
-                    <TableCell colSpan={2} />
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {mockLines.map((line) => (
+                      <TableRow key={line.lineNo}>
+                        <TableCell className="text-right text-muted-foreground">
+                          {line.lineNo}
+                        </TableCell>
+                        <TableCell className="font-medium">{line.title}</TableCell>
+                        <TableCell className="text-right">{line.qty}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {fmt(line.unitPrice)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {fmt(line.qty * line.unitPrice)}
+                        </TableCell>
+                        <TableCell>{line.fund}</TableCell>
+                        <TableCell>
+                          {line.received ? (
+                            <span className="flex items-center gap-1 text-success text-sm">
+                              <Check className="h-3.5 w-3.5" />
+                              Received
+                            </span>
+                          ) : (
+                            <Badge variant="outline">Pending</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Total row */}
+                    <TableRow className="bg-muted/30 font-semibold">
+                      <TableCell colSpan={4} className="text-right text-sm">
+                        Total
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {fmt(lineTotal)}
+                      </TableCell>
+                      <TableCell colSpan={2} />
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -187,48 +189,50 @@ function AcquisitionsDetail() {
           ) : (
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="font-mono">Invoice ID</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Invoice date</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {poInvoices.map((inv) => (
-                      <TableRow key={inv.id}>
-                        <TableCell className="font-mono text-xs">
-                          {inv.id}
-                        </TableCell>
-                        <TableCell>{inv.vendor}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {fmt(inv.amount)}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {inv.invoiceDate}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              inv.status === "Paid"
-                                ? "default"
-                                : inv.status === "Approved"
-                                  ? "secondary"
-                                  : inv.status === "Disputed"
-                                    ? "destructive"
-                                    : "outline"
-                            }
-                          >
-                            {inv.status}
-                          </Badge>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-mono">Invoice ID</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Invoice date</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {poInvoices.map((inv) => (
+                        <TableRow key={inv.id}>
+                          <TableCell className="font-mono text-xs">
+                            {inv.id}
+                          </TableCell>
+                          <TableCell>{inv.vendor}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {fmt(inv.amount)}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {inv.invoiceDate}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                inv.status === "Paid"
+                                  ? "default"
+                                  : inv.status === "Approved"
+                                    ? "secondary"
+                                    : inv.status === "Disputed"
+                                      ? "destructive"
+                                      : "outline"
+                              }
+                            >
+                              {inv.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           )}

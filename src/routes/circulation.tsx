@@ -64,7 +64,7 @@ function PatronPanel({ patronId, open, onClose, checkouts, fines }: {
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-[420px] sm:w-[480px] overflow-y-auto">
+      <SheetContent className="w-full sm:w-[420px] md:w-[480px] overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle className="font-serif">Patron account</SheetTitle>
         </SheetHeader>
@@ -494,16 +494,18 @@ function Circulation() {
 
       <div className="mt-6">
         <Tabs defaultValue="checkout">
-          <TabsList>
-            <TabsTrigger value="checkout"><BookOpen className="mr-1.5 h-4 w-4" />Check out</TabsTrigger>
-            <TabsTrigger value="return"><RotateCcw className="mr-1.5 h-4 w-4" />Return / Renew</TabsTrigger>
-            <TabsTrigger value="holds"><Bookmark className="mr-1.5 h-4 w-4" />Holds</TabsTrigger>
-            <TabsTrigger value="fines"><DollarSign className="mr-1.5 h-4 w-4" />Fines</TabsTrigger>
-            <TabsTrigger value="transit">
-              <ArrowRightLeft className="mr-1.5 h-4 w-4" />Transit
-              {inTransitCount > 0 && <span className="ml-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1.5">{inTransitCount}</span>}
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="w-max min-w-full">
+              <TabsTrigger value="checkout"><BookOpen className="mr-1.5 h-4 w-4" />Check out</TabsTrigger>
+              <TabsTrigger value="return"><RotateCcw className="mr-1.5 h-4 w-4" />Return / Renew</TabsTrigger>
+              <TabsTrigger value="holds"><Bookmark className="mr-1.5 h-4 w-4" />Holds</TabsTrigger>
+              <TabsTrigger value="fines"><DollarSign className="mr-1.5 h-4 w-4" />Fines</TabsTrigger>
+              <TabsTrigger value="transit">
+                <ArrowRightLeft className="mr-1.5 h-4 w-4" />Transit
+                {inTransitCount > 0 && <span className="ml-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1.5">{inTransitCount}</span>}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ── Check out ── */}
           <TabsContent value="checkout" className="mt-4">
@@ -543,6 +545,7 @@ function Circulation() {
             <Card>
               <CardHeader><CardTitle className="font-serif">Active loans</CardTitle></CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -583,6 +586,7 @@ function Circulation() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
                 <DataPagination {...checkoutPag} page={checkoutPage.page} pageSize={checkoutPage.pageSize} onChange={setCheckoutPage} />
               </CardContent>
             </Card>
@@ -596,6 +600,7 @@ function Circulation() {
                 <Button size="sm" onClick={() => setShowPlaceHold(true)}>+ Place hold</Button>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -633,6 +638,7 @@ function Circulation() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
                 <DataPagination {...holdsPag} page={holdsPage.page} pageSize={holdsPage.pageSize} onChange={setHoldsPage} />
               </CardContent>
             </Card>
@@ -648,6 +654,7 @@ function Circulation() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -687,6 +694,7 @@ function Circulation() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
                 <DataPagination {...finesPag} page={finesPage.page} pageSize={finesPage.pageSize} onChange={setFinesPage} />
               </CardContent>
             </Card>
@@ -713,6 +721,7 @@ function Circulation() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -763,6 +772,7 @@ function Circulation() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
                 <DataPagination {...transitPag} page={transitPage.page} pageSize={transitPage.pageSize} onChange={setTransitPage} />
               </CardContent>
             </Card>
