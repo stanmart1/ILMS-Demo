@@ -344,19 +344,27 @@ function OPAC() {
       title="Public catalog (OPAC)"
       description="What patrons see when they search the collection."
       actions={
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (opacPatron) {
-              setAccountOpen(true);
-            } else {
-              setLoginOpen(true);
-            }
-          }}
-        >
-          <User className="mr-1.5 h-4 w-4" />
-          {opacPatron ? `My Account (${opacPatron.name})` : "Sign in"}
-        </Button>
+        <>
+          <Link to="/glossary">
+            <Button variant="ghost" size="sm">
+              <BookOpen className="mr-1.5 h-4 w-4" />
+              Glossary
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (opacPatron) {
+                setAccountOpen(true);
+              } else {
+                setLoginOpen(true);
+              }
+            }}
+          >
+            <User className="mr-1.5 h-4 w-4" />
+            {opacPatron ? `My Account (${opacPatron.name})` : "Sign in"}
+          </Button>
+        </>
       }
     >
       {/* ── Patron login dialog ─────────────────────────────────────────── */}

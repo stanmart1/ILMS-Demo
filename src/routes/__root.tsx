@@ -26,6 +26,7 @@ import {
   LogOut,
   User,
   CheckCheck,
+  BookOpen,
 } from "lucide-react";
 
 import appCss from "../styles.css?url";
@@ -49,6 +50,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { GlossaryDialog } from "./glossary";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -137,6 +139,7 @@ const navItems = [
   { to: "/opac", label: "OPAC", icon: Search },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/admin", label: "Administration", icon: Settings },
+  { to: "/glossary", label: "Glossary", icon: BookOpen },
 ] as const;
 
 function ThemeToggle() {
@@ -295,18 +298,22 @@ function AuthGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
+  const PUBLIC_PATHS = ["/login", "/glossary"];
+
   useEffect(() => {
-    if (!user && pathname !== "/login") navigate({ to: "/login" });
+    if (!user && !PUBLIC_PATHS.includes(pathname)) navigate({ to: "/login" });
     if (user && pathname === "/login") navigate({ to: "/" });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, pathname, navigate]);
 
-  if (!user && pathname !== "/login") return null;
+  if (!user && !PUBLIC_PATHS.includes(pathname)) return null;
   return <>{children}</>;
 }
 
 function AppLayout() {
   const { user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   if (pathname === "/login" || !user) {
     return <Outlet />;
@@ -327,6 +334,15 @@ function AppLayout() {
             <span className="hidden text-xs text-muted-foreground sm:inline">
               Logged in as <span className="font-medium text-foreground">{user.name.split(" ").map((p, i) => i === 0 ? p[0] + "." : p).join(" ")}</span>
             </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setGlossaryOpen(true)}
+              title="Library Glossary"
+            >
+              <BookOpen className="h-4 w-4" />
+            </Button>
             <ThemeToggle />
             <NotificationBell />
             <UserMenu />
@@ -336,6 +352,7 @@ function AppLayout() {
           <Outlet />
         </main>
       </SidebarInset>
+      <GlossaryDialog open={glossaryOpen} onOpenChange={setGlossaryOpen} />
     </SidebarProvider>
   );
 }

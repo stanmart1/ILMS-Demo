@@ -13,6 +13,7 @@ import { Route as SerialsRouteImport } from './routes/serials'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OpacRouteImport } from './routes/opac'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as CirculationRouteImport } from './routes/circulation'
 import { Route as CatalogingRouteImport } from './routes/cataloging'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -41,6 +42,11 @@ const OpacRoute = OpacRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GlossaryRoute = GlossaryRouteImport.update({
+  id: '/glossary',
+  path: '/glossary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CirculationRoute = CirculationRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
+  '/glossary': typeof GlossaryRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
+  '/glossary': typeof GlossaryRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cataloging': typeof CatalogingRouteWithChildren
   '/circulation': typeof CirculationRoute
+  '/glossary': typeof GlossaryRoute
   '/login': typeof LoginRoute
   '/opac': typeof OpacRouteWithChildren
   '/reports': typeof ReportsRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/glossary'
     | '/login'
     | '/opac'
     | '/reports'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/glossary'
     | '/login'
     | '/opac'
     | '/reports'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cataloging'
     | '/circulation'
+    | '/glossary'
     | '/login'
     | '/opac'
     | '/reports'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogingRoute: typeof CatalogingRouteWithChildren
   CirculationRoute: typeof CirculationRoute
+  GlossaryRoute: typeof GlossaryRoute
   LoginRoute: typeof LoginRoute
   OpacRoute: typeof OpacRouteWithChildren
   ReportsRoute: typeof ReportsRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/glossary': {
+      id: '/glossary'
+      path: '/glossary'
+      fullPath: '/glossary'
+      preLoaderRoute: typeof GlossaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/circulation': {
@@ -332,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogingRoute: CatalogingRouteWithChildren,
   CirculationRoute: CirculationRoute,
+  GlossaryRoute: GlossaryRoute,
   LoginRoute: LoginRoute,
   OpacRoute: OpacRouteWithChildren,
   ReportsRoute: ReportsRoute,
