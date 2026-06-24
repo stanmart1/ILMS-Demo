@@ -580,7 +580,7 @@ function ReportBuilderTab() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div>
                   <Label>Group by</Label>
                   <Controller name="groupBy" control={control} render={({ field }) => (
@@ -1173,7 +1173,7 @@ function ScheduledReportsTab() {
               <input type="hidden" {...register("reportId")} defaultValue={editTarget?.reportId ?? REPORT_LIBRARY[0]?.id} />
               {errors.reportId && <p className="text-xs text-destructive mt-1">{errors.reportId.message}</p>}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>Frequency</Label>
                 <Select defaultValue={editTarget?.frequency ?? "Weekly"}>

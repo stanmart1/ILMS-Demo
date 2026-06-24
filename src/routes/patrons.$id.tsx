@@ -134,7 +134,7 @@ function PatronDetail() {
                   Account summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-4">
+              <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <div className="font-serif text-2xl font-semibold">
                     {activeLoans}
